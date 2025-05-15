@@ -9325,8 +9325,8 @@ const ErrorToast = ({ errorMessage, setErrorMessage }) => {
 };
 const CartItemButton$1 = newStyled.button`
   padding: 4px 8px;
-  background-color: ${({ $isAdd }) => $isAdd ? "#EAEAEA" : "#000"};
-  color: ${({ $isAdd }) => $isAdd ? "#000" : "#fff"};
+  background-color: ${({ $isAdded }) => $isAdded ? "#EAEAEA" : "#000"};
+  color: ${({ $isAdded }) => $isAdded ? "#000" : "#fff"};
   border: none;
   width: 60px;
   border-radius: 4px;
@@ -9346,10 +9346,10 @@ const AddCart = "/react-shopping-products/add-cart.svg";
 const RemoveCart = "/react-shopping-products/remove-cart.svg";
 const AddCartIcon = () => /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: AddCart, alt: "장바구니에서 상품 추가" });
 const RemoveCartIcon = () => /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: RemoveCart, alt: "장바구니에서 상품 삭제" });
-const CartItemButton = ({ isAdd, onToggleCartItem }) => {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CartItemButton$1, { $isAdd: isAdd, onClick: onToggleCartItem, children: [
-    isAdd ? /* @__PURE__ */ jsxRuntimeExports.jsx(RemoveCartIcon, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(AddCartIcon, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CartItemAddText, { children: isAdd ? "빼기" : "담기" })
+const CartItemButton = ({ isAdded, onToggleCartItem }) => {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CartItemButton$1, { $isAdded: isAdded, onClick: onToggleCartItem, children: [
+    isAdded ? /* @__PURE__ */ jsxRuntimeExports.jsx(RemoveCartIcon, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(AddCartIcon, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CartItemAddText, { children: isAdded ? "빼기" : "담기" })
   ] }) });
 };
 const ProductContainer = newStyled.div`
@@ -9392,7 +9392,7 @@ const ProductItem = ({
   imageUrl,
   name,
   price,
-  isAdd,
+  isAdded,
   handleCartItemToggle
 }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductContainer, { "data-testid": "product-item", children: [
@@ -9400,7 +9400,13 @@ const ProductItem = ({
     /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductWrapper, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(ProductName, { "data-testid": "product-name", children: name }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(ProductPrice, { "data-testid": "product-price", children: price }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(CartItemButton, { isAdd, onToggleCartItem: handleCartItemToggle })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        CartItemButton,
+        {
+          isAdded,
+          onToggleCartItem: handleCartItemToggle
+        }
+      )
     ] })
   ] });
 };
@@ -9458,6 +9464,7 @@ const CartItemCount = newStyled.div`
   line-height: 20px;
   background-color: #fff;
   border-radius: 100%;
+  cursor: pointer;
 `;
 const Cart = "/react-shopping-products/cart.svg";
 const ShopHeader = ({ cartItemCount }) => {
@@ -9527,13 +9534,16 @@ const skeletonLoading = keyframes`
     background-color:rgb(245, 245, 245)
   }
 `;
-const Skeleton = newStyled.div`
+const Skeleton$1 = newStyled.div`
   border-radius: 8px;
   width: 100%;
   height: 100%;
 
   animation: ${skeletonLoading} 1s linear infinite alternate;
 `;
+const Skeleton = ({ ...props }) => {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton$1, { ...props });
+};
 const ProductItemSkeleton = () => {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(SkeletonContainer, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { style: { height: "50%" } }),
@@ -9638,7 +9648,7 @@ function App() {
           imageUrl,
           name,
           price,
-          isAdd: cartItemIds.some(
+          isAdded: cartItemIds.some(
             (productInfo) => productInfo.productId === id2
           ),
           handleCartItemToggle: () => handleCartItemToggle(id2)
