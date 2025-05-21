@@ -7607,115 +7607,6 @@ var m$1 = reactDomExports;
   client.createRoot = m$1.createRoot;
   client.hydrateRoot = m$1.hydrateRoot;
 }
-const SHOP_API = {
-  baseUrl: `${"http://techcourse-lv2-alb-974870821.ap-northeast-2.elb.amazonaws.com/"}`,
-  endpoint: {
-    products: "products",
-    cartItems: "cart-items"
-  }
-};
-const createApiUrl = (endpoint, params) => {
-  const searchParams = new URLSearchParams(params);
-  return `${SHOP_API.baseUrl}${endpoint}?${searchParams.toString()}`;
-};
-const fetchWithErrorHandling = async (url, options, parseJson = true) => {
-  try {
-    const response = await fetch(url, options);
-    if (!response.ok) {
-      switch (response.status) {
-        case 400:
-          return { error: "잘못된 요청입니다. 입력값을 다시 확인해주세요." };
-        case 401:
-          return { error: "인증이 필요합니다. 로그인 후 다시 시도해주세요." };
-        case 403:
-          return { error: "접근이 거부되었습니다. 권한을 확인해주세요." };
-        case 404:
-          return { error: "요청한 리소스를 찾을 수 없습니다." };
-        case 500:
-          return {
-            error: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
-          };
-        default:
-          return { error: `에러가 발생했습니다. (코드: ${response.status})` };
-      }
-    }
-    if (parseJson)
-      return response.json();
-    return;
-  } catch (error) {
-    if (error instanceof Error) {
-      return {
-        error: `에러가 발생했습니다: ${error.message}`
-      };
-    }
-    return {
-      error: "예기치 못한 오류가 발생했습니다. 다시 시도해주세요."
-    };
-  }
-};
-const CartItemsAPI = {
-  get: async () => {
-    const params = {
-      page: "0",
-      size: "50"
-    };
-    const options = {
-      method: "GET",
-      headers: {
-        Authorization: `Basic ${"c29veWVvbml5YTpwYXNzd29yZA"}`
-      }
-    };
-    const apiUrl = createApiUrl(SHOP_API.endpoint.cartItems, params);
-    return await fetchWithErrorHandling(apiUrl, options);
-  },
-  post: async (productId) => {
-    const options = {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${"c29veWVvbml5YTpwYXNzd29yZA"}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        productId,
-        quantity: 1
-      })
-    };
-    const apiUrl = createApiUrl(SHOP_API.endpoint.cartItems);
-    return await fetchWithErrorHandling(apiUrl, options, false);
-  },
-  delete: async (cartId) => {
-    const options = {
-      method: "DELETE",
-      headers: {
-        Authorization: `Basic ${"c29veWVvbml5YTpwYXNzd29yZA"}`
-      }
-    };
-    const apiUrl = `${SHOP_API.baseUrl}${SHOP_API.endpoint.cartItems}/${cartId}`;
-    return await fetchWithErrorHandling(apiUrl, options, false);
-  }
-};
-const sortOptionsMap = {
-  "낮은 가격 순": "price,asc",
-  "높은 가격 순": "price,desc"
-};
-const sortOptions = Object.keys(sortOptionsMap);
-const CategoryOptions = ["전체", "식료품", "패션잡화"];
-const ProductsAPI = {
-  get: async (category, selectedSortOption) => {
-    const params = {
-      page: "0",
-      size: "20"
-    };
-    if (category !== "전체") {
-      params.category = category;
-    }
-    if (selectedSortOption && sortOptionsMap[selectedSortOption]) {
-      params.sort = sortOptionsMap[selectedSortOption];
-    }
-    const apiUrl = createApiUrl(SHOP_API.endpoint.products, params);
-    return await fetchWithErrorHandling(apiUrl);
-  }
-};
 function _extends() {
   _extends = Object.assign ? Object.assign.bind() : function(target) {
     for (var i = 1; i < arguments.length; i++) {
@@ -9271,34 +9162,43 @@ const Select = newStyled.select`
   padding: 8px;
 `;
 const SelectBox = ({
-  id: id2,
-  state,
-  setState,
+  value,
+  onChange,
   options
 }) => {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Select,
-    {
-      "data-testid": `${id2}-select`,
-      value: state,
-      onChange: (e2) => setState(e2.target.value),
-      children: options.map((option, index) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: option, children: option }, index))
-    }
-  );
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Select, { value, onChange: (e2) => onChange(e2.target.value), children: options.map((option, index) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: option, children: option }, index)) });
 };
-const CategoryFilter = ({
-  selectedCategory,
-  setSelectedCategory
-}) => {
+const sortOptions = ["낮은 가격 순", "높은 가격 순"];
+const categoryOptions = ["전체", "식료품", "패션잡화"];
+const CategoryFilter = ({ selectedCategory, setSelectedCategory }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     SelectBox,
     {
       id: "category",
-      state: selectedCategory,
-      setState: setSelectedCategory,
-      options: CategoryOptions
+      value: selectedCategory,
+      onChange: setSelectedCategory,
+      options: categoryOptions
     }
   );
+};
+const Toast = ({
+  children,
+  duration = 5e3,
+  visible: defaultVisible = false,
+  onClose
+}) => {
+  const [visible, setVisible] = reactExports.useState(defaultVisible);
+  reactExports.useEffect(() => {
+    const timer = setTimeout(() => {
+      setVisible(false);
+      onClose == null ? void 0 : onClose();
+    }, duration);
+    return () => clearTimeout(timer);
+  }, [duration, onClose]);
+  reactExports.useEffect(() => setVisible(defaultVisible), [defaultVisible]);
+  if (!visible)
+    return null;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
 };
 const ErrorToast$1 = newStyled.div`
   width: 100%;
@@ -9312,16 +9212,8 @@ const ErrorToast$1 = newStyled.div`
   text-align: center;
   line-height: 40px;
 `;
-const ErrorToast = ({ errorMessage, setErrorMessage }) => {
-  reactExports.useEffect(() => {
-    if (errorMessage) {
-      const timer = setTimeout(() => {
-        setErrorMessage("");
-      }, 5e3);
-      return () => clearTimeout(timer);
-    }
-  }, [errorMessage]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: !!errorMessage && /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorToast$1, { children: errorMessage }) });
+const ErrorToast = ({ message, onClose }) => {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Toast, { visible: !!message, onClose, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorToast$1, { children: message }) });
 };
 const CartItemButton$1 = newStyled.button`
   padding: 4px 8px;
@@ -9395,11 +9287,11 @@ const ProductItem = ({
   isAdded,
   handleCartItemToggle
 }) => {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductContainer, { "data-testid": "product-item", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductContainer, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(ProductImage, { $url: imageUrl }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductWrapper, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(ProductName, { "data-testid": "product-name", children: name }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(ProductPrice, { "data-testid": "product-price", children: price }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ProductName, { children: name }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ProductPrice, { children: price }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         CartItemButton,
         {
@@ -9425,9 +9317,8 @@ const ProductSorter = ({
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     SelectBox,
     {
-      id: "sort",
-      state: selectedSortOption,
-      setState: setSelectedSortOption,
+      value: selectedSortOption,
+      onChange: setSelectedSortOption,
       options: sortOptions
     }
   );
@@ -9471,7 +9362,7 @@ const ShopHeader = ({ cartItemCount }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Header, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Logo, { href: "/", children: "SHOP" }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(CartImage, { src: Cart, alt: "장바구니" }),
-    !!cartItemCount && /* @__PURE__ */ jsxRuntimeExports.jsx(CartItemCount, { "data-testid": "cart-item-count", children: cartItemCount })
+    !!cartItemCount && /* @__PURE__ */ jsxRuntimeExports.jsx(CartItemCount, { children: cartItemCount })
   ] });
 };
 const LayoutContainer = newStyled.div`
@@ -9507,25 +9398,6 @@ const ProductGrid = newStyled.div`
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 `;
-const isErrorResponse = (response) => {
-  return response && typeof response === "object" && "error" in response;
-};
-const SkeletonContainer = newStyled.div`
-  display: flex;
-  width: 182px;
-  height: 224px;
-  flex-direction: column;
-  border-radius: 8px;
-`;
-const SkeletonWrapper = newStyled.div`
-  display: flex;
-  flex-direction: column;
-  padding: 15px 8px 8px;
-  border-radius: 0 0 8px 8px;
-  height: 50%;
-  position: relative;
-  border-top: none;
-`;
 const skeletonLoading = keyframes`
   0% {
     background-color: #d7dadc;
@@ -9544,36 +9416,128 @@ const Skeleton$1 = newStyled.div`
 const Skeleton = ({ ...props }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton$1, { ...props });
 };
+const SkeletonContainer = newStyled.div`
+  display: flex;
+  width: 182px;
+  height: 224px;
+  flex-direction: column;
+  border-radius: 8px;
+`;
+const SkeletonWrapper = newStyled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 15px 8px 8px;
+  border-radius: 0 0 8px 8px;
+  height: 50%;
+  position: relative;
+  border-top: none;
+`;
+const IMAGE_STYLE = { height: "50%" };
+const NAME_STYLE = {
+  width: "50%",
+  height: "14px",
+  marginBottom: "6px"
+};
+const PRICE_STYLE = { width: "30%", height: "12px" };
+const BUTTON_STYLE = {
+  width: "60px",
+  height: "24px",
+  position: "absolute",
+  right: "8px",
+  bottom: "8px"
+};
 const ProductItemSkeleton = () => {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(SkeletonContainer, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { style: { height: "50%" } }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { style: IMAGE_STYLE }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(SkeletonWrapper, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Skeleton,
-        {
-          style: { width: "50%", height: "14px", marginBottom: "6px" }
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { style: { width: "30%", height: "12px" } }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Skeleton,
-        {
-          style: {
-            width: "60px",
-            height: "24px",
-            position: "absolute",
-            right: "8px",
-            bottom: "8px"
-          }
-        }
-      )
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { style: NAME_STYLE }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { style: PRICE_STYLE }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { style: BUTTON_STYLE })
     ] })
   ] });
 };
-function App() {
+const SHOP_API = {
+  baseUrl: `${"http://techcourse-lv2-alb-974870821.ap-northeast-2.elb.amazonaws.com/"}`,
+  endpoint: {
+    products: "products",
+    cartItems: "cart-items"
+  },
+  headers: {
+    default: {
+      Authorization: `Basic ${"c29veWVvbml5YTpwYXNzd29yZA=="}`
+    }
+  }
+};
+const createApiUrl = (endpoint, params) => {
+  const searchParams = new URLSearchParams(params);
+  return `${SHOP_API.baseUrl}${endpoint}?${searchParams.toString()}`;
+};
+const applyDefaultHeaders = (options = {}) => {
+  return {
+    ...options,
+    headers: { ...SHOP_API.headers.default, ...options.headers || {} }
+  };
+};
+const fetchWithErrorHandling = async (url, options, parseJson = true) => {
+  try {
+    const response = await fetch(url, applyDefaultHeaders(options));
+    if (!response.ok) {
+      switch (response.status) {
+        case 400:
+          return { error: "잘못된 요청입니다. 입력값을 다시 확인해주세요." };
+        case 401:
+          return { error: "인증이 필요합니다. 로그인 후 다시 시도해주세요." };
+        case 403:
+          return { error: "접근이 거부되었습니다. 권한을 확인해주세요." };
+        case 404:
+          return { error: "요청한 리소스를 찾을 수 없습니다." };
+        case 500:
+          return {
+            error: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+          };
+        default:
+          return { error: `에러가 발생했습니다. (코드: ${response.status})` };
+      }
+    }
+    if (parseJson)
+      return response.json();
+    return;
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        error: `에러가 발생했습니다: ${error.message}`
+      };
+    }
+    return {
+      error: "예기치 못한 오류가 발생했습니다. 다시 시도해주세요."
+    };
+  }
+};
+const sortOptionsMap = {
+  "낮은 가격 순": "price,asc",
+  "높은 가격 순": "price,desc"
+};
+const ProductsAPI = {
+  get: async (category, selectedSortOption) => {
+    const params = {
+      page: "0",
+      size: "20"
+    };
+    if (category !== "전체") {
+      params.category = category;
+    }
+    if (selectedSortOption && sortOptionsMap[selectedSortOption]) {
+      params.sort = sortOptionsMap[selectedSortOption];
+    }
+    const apiUrl = createApiUrl(SHOP_API.endpoint.products, params);
+    return await fetchWithErrorHandling(apiUrl);
+  }
+};
+const isErrorResponse = (response) => {
+  return response !== null && response !== void 0 && typeof response === "object" && "error" in response;
+};
+const useProducts = (setErrorMessage) => {
   const [products, setProducts] = reactExports.useState(null);
-  const [cartItems, setCartItems] = reactExports.useState(null);
-  const [errorMessage, setErrorMessage] = reactExports.useState("");
   const [isLoading, setIsLoading] = reactExports.useState(false);
   const [selectedCategory, setSelectedCategory] = reactExports.useState("전체");
   const [selectedSortOption, setSelectedSortOption] = reactExports.useState("낮은 가격 순");
@@ -9591,7 +9555,46 @@ function App() {
       }
       setProducts(response);
     })();
-  }, [selectedCategory, selectedSortOption]);
+  }, [selectedCategory, selectedSortOption, setErrorMessage]);
+  return {
+    products,
+    isLoading,
+    selectedCategory,
+    setSelectedCategory,
+    selectedSortOption,
+    setSelectedSortOption
+  };
+};
+const CART_ITEMS_BASE_URL = createApiUrl(SHOP_API.endpoint.cartItems);
+const CartItemsAPI = {
+  get: async () => {
+    const params = {
+      page: "0",
+      size: "50"
+    };
+    const options = { method: "GET" };
+    const apiUrl = createApiUrl(SHOP_API.endpoint.cartItems, params);
+    return await fetchWithErrorHandling(apiUrl, options);
+  },
+  post: async (productId) => {
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId,
+        quantity: 1
+      })
+    };
+    return await fetchWithErrorHandling(CART_ITEMS_BASE_URL, options, false);
+  },
+  delete: async (cartId) => {
+    const options = { method: "DELETE" };
+    const apiUrl = `${SHOP_API.baseUrl}${SHOP_API.endpoint.cartItems}/${cartId}`;
+    return await fetchWithErrorHandling(apiUrl, options, false);
+  }
+};
+const useCartItems = (setErrorMessage) => {
+  const [cartItems, setCartItems] = reactExports.useState(null);
   reactExports.useEffect(() => {
     (async () => {
       const response = await CartItemsAPI.get();
@@ -9601,11 +9604,19 @@ function App() {
       }
       setCartItems(response);
     })();
-  }, []);
-  const cartItemIds = (cartItems == null ? void 0 : cartItems.content.map((productInfo) => ({
-    cartId: productInfo.id,
-    productId: productInfo.product.id
-  }))) ?? [];
+  }, [setErrorMessage]);
+  const cartItemIds = reactExports.useMemo(
+    () => (cartItems == null ? void 0 : cartItems.content.map((productInfo) => ({
+      cartId: productInfo.id,
+      productId: productInfo.product.id
+    }))) ?? [],
+    [cartItems == null ? void 0 : cartItems.content]
+  );
+  const cartItemsCount = (cartItems == null ? void 0 : cartItems.content.length) ?? 0;
+  const isProductInCart = reactExports.useCallback(
+    (id2) => cartItemIds.some((item) => item.productId === id2),
+    [cartItemIds]
+  );
   const handleCartItemToggle = async (productId) => {
     const currentProductId = cartItemIds.find(
       (productInfo) => productInfo.productId === productId
@@ -9622,8 +9633,25 @@ function App() {
     }
     setCartItems(response);
   };
+  return {
+    cartItemsCount,
+    isProductInCart,
+    handleCartItemToggle
+  };
+};
+function App() {
+  const [errorMessage, setErrorMessage] = reactExports.useState("");
+  const {
+    products,
+    isLoading,
+    selectedCategory,
+    setSelectedCategory,
+    selectedSortOption,
+    setSelectedSortOption
+  } = useProducts(setErrorMessage);
+  const { cartItemsCount, isProductInCart, handleCartItemToggle } = useCartItems(setErrorMessage);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(LayoutContainer, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(LayoutWrapper, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ShopHeader, { cartItemCount: (cartItems == null ? void 0 : cartItems.content.length) ?? 0 }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ShopHeader, { cartItemCount: cartItemsCount }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Wrapper, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(ProductsListTitle, {}),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductControlPanel, { children: [
@@ -9648,9 +9676,7 @@ function App() {
           imageUrl,
           name,
           price,
-          isAdded: cartItemIds.some(
-            (productInfo) => productInfo.productId === id2
-          ),
+          isAdded: isProductInCart(id2),
           handleCartItemToggle: () => handleCartItemToggle(id2)
         },
         id2
@@ -9658,8 +9684,8 @@ function App() {
       !!errorMessage && /* @__PURE__ */ jsxRuntimeExports.jsx(
         ErrorToast,
         {
-          errorMessage,
-          setErrorMessage
+          message: errorMessage,
+          onClose: () => setErrorMessage("")
         }
       )
     ] })
