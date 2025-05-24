@@ -9396,7 +9396,7 @@ const AddCartItemButton = ({ disabled, ...props }) => {
     /* @__PURE__ */ jsxRuntimeExports.jsx(Text, { children: disabled ? "품절" : "담기" })
   ] });
 };
-const DEFAULT_IMAGE_URL$1 = "/default-image.webp";
+const DEFAULT_IMAGE_URL$1 = "./default-image.webp";
 const isValidUrl$1 = (url) => url && (url.startsWith("http://") || url.startsWith("https://"));
 const ProductContainer = newStyled.div`
   display: flex;
@@ -9622,7 +9622,7 @@ const TotalPriceValue = newStyled.span`
   font-size: 24px;
   line-height: 100%;
 `;
-const DEFAULT_IMAGE_URL = "/default-image.webp";
+const DEFAULT_IMAGE_URL = "./default-image.webp";
 const isValidUrl = (url) => url && (url.startsWith("http://") || url.startsWith("https://"));
 const ProductItem$1 = newStyled.div`
   width: 100%;
@@ -10270,7 +10270,7 @@ function App() {
   ] }) });
 }
 async function enableMocking() {
-  const { worker } = await __vitePreload(() => import("./browser-Dgt0s_-L.js"), true ? [] : void 0);
+  const { worker } = await __vitePreload(() => import("./browser-B_njTKXr.js"), true ? [] : void 0);
   const baseUrl = "/react-shopping-products/";
   return worker.start({
     serviceWorker: {
