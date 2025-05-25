@@ -11443,9 +11443,15 @@ const SHOP_API = {
 const isApiError = (response) => {
   return response !== null && response !== void 0 && typeof response === "object" && "error" in response && typeof response.error === "string";
 };
+const isApiSuccess = (response) => {
+  return response !== null && response !== void 0 && typeof response === "object" && "success" in response && response.success === true;
+};
 const createApiUrl = (endpoint, params) => {
   const searchParams = new URLSearchParams(params);
   return `${SHOP_API.baseUrl}${endpoint}?${searchParams.toString()}`;
+};
+const createResourceUrl = (endpoint, resourceId) => {
+  return `${SHOP_API.baseUrl}${endpoint}/${resourceId}`;
 };
 const applyDefaultHeaders = (options = {}) => {
   return {
@@ -11466,24 +11472,63 @@ const fetchAPI = async (url, options, parseJson = true) => {
     if (!response.ok) {
       const status = response.status;
       const message = ERROR_MESSAGES[status] || `에러가 발생했습니다. (코드: ${status})`;
-      return {
-        error: message,
-        status
-      };
+      return { error: message, status };
     }
     if (parseJson)
-      return response.json();
-    return {};
+      return await response.json();
+    return { success: true };
   } catch (error) {
     if (error instanceof Error) {
-      return {
-        error: `네트워크 에러: ${error.message}`
-      };
+      return { error: `네트워크 에러: ${error.message}` };
     }
-    return {
-      error: "예기치 못한 오류가 발생했습니다. 다시 시도해주세요."
-    };
+    return { error: "예기치 못한 오류가 발생했습니다. 다시 시도해주세요." };
   }
+};
+const getData = async (url, options = {}) => {
+  return fetchAPI(url, {
+    ...options,
+    method: "GET"
+  });
+};
+const postData = async (url, data, options = {}) => {
+  return fetchAPI(
+    url,
+    {
+      ...options,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers
+      },
+      body: data ? JSON.stringify(data) : void 0
+    },
+    false
+  );
+};
+const deleteData = async (url, options = {}) => {
+  return fetchAPI(
+    url,
+    {
+      ...options,
+      method: "DELETE"
+    },
+    false
+  );
+};
+const patchData = async (url, data, options = {}) => {
+  return fetchAPI(
+    url,
+    {
+      ...options,
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers
+      },
+      body: data ? JSON.stringify(data) : void 0
+    },
+    false
+  );
 };
 const useAPI = (key, fetcher) => {
   const { data, fetchData } = reactExports.useContext(APIContext);
@@ -11507,24 +11552,20 @@ const useAPI = (key, fetcher) => {
   );
   return { ...result, refetch };
 };
+const URL$2 = SHOP_API.endpoint.products;
 const sortOptionsMap = {
   "낮은 가격 순": "price,asc",
   "높은 가격 순": "price,desc"
 };
 const ProductsAPI = {
-  get: async (category, selectedSortOption) => {
-    const params = {
-      page: "0",
-      size: "20"
-    };
-    if (category !== "전체") {
+  get: async (category, sortOption) => {
+    const params = { page: "0", size: "20" };
+    if (category !== "전체")
       params.category = category;
+    if (sortOption && sortOptionsMap[sortOption]) {
+      params.sort = sortOptionsMap[sortOption];
     }
-    if (selectedSortOption && sortOptionsMap[selectedSortOption]) {
-      params.sort = sortOptionsMap[selectedSortOption];
-    }
-    const apiUrl = createApiUrl(SHOP_API.endpoint.products, params);
-    return await fetchAPI(apiUrl);
+    return getData(createApiUrl(URL$2, params));
   }
 };
 const useProducts = () => {
@@ -11605,6 +11646,7 @@ const Toast$1 = newStyled.div`
   top: 64px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 1000;
 `;
 const Toast = ({ message, type }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Toast$1, { $type: type, children: message }) });
@@ -11649,6 +11691,65 @@ const useToast = () => {
     throw new Error("useToast must be used within ToastProvider");
   }
   return context;
+};
+const useApiResponseToasts = (autoWatchError) => {
+  const { showToast } = useToast();
+  const handleError = reactExports.useCallback(
+    (response, customMessage) => {
+      if (isApiError(response)) {
+        showToast({
+          message: customMessage || response.error,
+          type: TOAST_TYPES.ERROR
+        });
+        return true;
+      }
+      return false;
+    },
+    [showToast]
+  );
+  const handleSuccess = reactExports.useCallback(
+    (response, message) => {
+      const isSuccess = !response || isApiSuccess(response) || !isApiError(response) && response !== void 0 && response !== null;
+      if (isSuccess) {
+        showToast({
+          message,
+          type: TOAST_TYPES.SUCCESS
+        });
+        return true;
+      }
+      return false;
+    },
+    [showToast]
+  );
+  const showSuccess = reactExports.useCallback(
+    (message) => {
+      showToast({
+        message,
+        type: TOAST_TYPES.SUCCESS
+      });
+    },
+    [showToast]
+  );
+  const showError = reactExports.useCallback(
+    (error, customMessage) => {
+      if (error) {
+        showToast({
+          message: customMessage ?? error,
+          type: TOAST_TYPES.ERROR
+        });
+      }
+    },
+    [showToast]
+  );
+  reactExports.useEffect(() => {
+    if (autoWatchError) {
+      showToast({
+        message: autoWatchError,
+        type: TOAST_TYPES.ERROR
+      });
+    }
+  }, [autoWatchError, showToast]);
+  return { handleError, handleSuccess, showError, showSuccess };
 };
 const ProductCatalog$1 = newStyled.div`
   height: 100%;
@@ -11708,42 +11809,26 @@ const ProductSorter = () => {
     }
   );
 };
-const CART_ITEMS_BASE_URL = createApiUrl(SHOP_API.endpoint.cartItems);
+const URL$1 = SHOP_API.endpoint.cartItems;
 const CartItemsAPI = {
   get: async () => {
-    const params = {
-      page: "0",
-      size: "50"
-    };
-    const options = { method: "GET" };
-    const apiUrl = createApiUrl(SHOP_API.endpoint.cartItems, params);
-    return await fetchAPI(apiUrl, options);
+    const params = { page: "0", size: "50" };
+    return getData(createApiUrl(URL$1, params));
   },
   post: async (productId) => {
-    const options = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId, quantity: 1 })
-    };
-    return await fetchAPI(CART_ITEMS_BASE_URL, options, false);
+    const data = { productId, quantity: 1 };
+    return postData(createApiUrl(URL$1), data);
   },
   delete: async (cartId) => {
-    const options = { method: "DELETE" };
-    const apiUrl = `${SHOP_API.baseUrl}${SHOP_API.endpoint.cartItems}/${cartId}`;
-    return await fetchAPI(apiUrl, options, false);
+    return deleteData(createResourceUrl(URL$1, cartId));
   },
   patch: async (cartId, quantity) => {
-    const options = {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: cartId, quantity })
-    };
-    const apiUrl = `${SHOP_API.baseUrl}${SHOP_API.endpoint.cartItems}/${cartId}`;
-    return await fetchAPI(apiUrl, options, false);
+    const data = { id: cartId, quantity };
+    return patchData(createResourceUrl(URL$1, cartId), data);
   }
 };
 const useCartItems = () => {
-  const { showToast } = useToast();
+  const { handleError, handleSuccess } = useApiResponseToasts();
   const fetcher = reactExports.useCallback(() => CartItemsAPI.get(), []);
   const {
     data: cartItems,
@@ -11791,25 +11876,22 @@ const useCartItems = () => {
       if (!currentProductId)
         return;
       const quantity = quantityByProductId(currentProductId.productId);
-      let response;
       if (quantity <= 1) {
-        response = await CartItemsAPI.delete(currentProductId.cartId);
+        const response = await CartItemsAPI.delete(currentProductId.cartId);
+        if (handleError(response))
+          return;
+        handleSuccess(response, "상품이 장바구니에서 삭제되었습니다.");
       } else {
-        response = await CartItemsAPI.patch(
+        const response = await CartItemsAPI.patch(
           currentProductId.cartId,
           quantity - 1
         );
-      }
-      if (isApiError(response)) {
-        showToast({
-          message: response.error,
-          type: TOAST_TYPES.ERROR
-        });
-        return;
+        if (handleError(response))
+          return;
       }
       refetch();
     },
-    [cartItemIds, quantityByProductId, refetch, showToast]
+    [cartItemIds, quantityByProductId, refetch, handleError, handleSuccess]
   );
   const increaseItemQuantity = reactExports.useCallback(
     async (productId) => {
@@ -11822,48 +11904,31 @@ const useCartItems = () => {
         currentProductId.cartId,
         quantityByProductId(currentProductId.productId) + 1
       );
-      if (isApiError(response)) {
-        showToast({
-          message: response.error,
-          type: TOAST_TYPES.ERROR
-        });
+      if (handleError(response))
         return;
-      }
       refetch();
     },
-    [cartItemIds, quantityByProductId, refetch, showToast]
+    [cartItemIds, quantityByProductId, refetch, handleError]
   );
   const addProductInCart = reactExports.useCallback(
     async (productId) => {
       const response = await CartItemsAPI.post(productId);
-      if (isApiError(response)) {
-        showToast({
-          message: response.error,
-          type: TOAST_TYPES.ERROR
-        });
+      if (handleError(response))
         return;
-      }
-      showToast({
-        message: "상품이 장바구니에 추가되었습니다.",
-        type: TOAST_TYPES.SUCCESS
-      });
+      handleSuccess(response, "상품이 장바구니에 추가되었습니다.");
       refetch();
     },
-    [refetch, showToast]
+    [refetch, handleError, handleSuccess]
   );
   const deleteProductInCart = reactExports.useCallback(
     async (cartId) => {
       const response = await CartItemsAPI.delete(cartId);
-      if (isApiError(response)) {
-        showToast({
-          message: response.error,
-          type: TOAST_TYPES.ERROR
-        });
+      if (handleError(response))
         return;
-      }
+      handleSuccess(response, "상품이 장바구니에서 삭제되었습니다.");
       refetch();
     },
-    [refetch, showToast]
+    [refetch, handleError, handleSuccess]
   );
   return {
     cartItems,
@@ -11905,7 +11970,7 @@ const ButtonIcon = newStyled.img`
   }
 
   ${({ $disabled }) => $disabled && css`
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: default;
       background-color: #f5f5f5;
       border-color: #e0e0e0;
@@ -12152,15 +12217,7 @@ const ProductItemSkeleton = () => {
 const ProductsSkeleton = Array.from({ length: 6 }).map((_, index) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItemSkeleton, {}, index));
 const ProductCatalog = () => {
   const { isLoading, products, error } = useProducts();
-  const { showToast } = useToast();
-  reactExports.useEffect(() => {
-    if (error) {
-      showToast({
-        message: error,
-        type: TOAST_TYPES.ERROR
-      });
-    }
-  }, [error, showToast]);
+  useApiResponseToasts(error);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductCatalog$1, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(ProductCatalogTitle, { children: "상품목록" }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductControlPanel, { children: [
@@ -12350,7 +12407,8 @@ const TotalPriceValue = newStyled.span`
 `;
 const CartModal = () => {
   const { closeModal } = useModal();
-  const { cartItems, totalPriceInCart } = useCartItems();
+  const { cartItems, totalPriceInCart, error } = useCartItems();
+  useApiResponseToasts(error);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(CartModal$1, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Title, { children: "장바구니" }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(ScrollContainer, { children: cartItems == null ? void 0 : cartItems.content.map((productInfo) => {
@@ -12427,7 +12485,7 @@ function App() {
   ] }) });
 }
 async function enableMocking() {
-  const { worker } = await __vitePreload(() => import("./browser-ByiflSMQ.js"), true ? [] : void 0);
+  const { worker } = await __vitePreload(() => import("./browser-B6miXEfh.js"), true ? [] : void 0);
   return worker.start({
     serviceWorker: {
       url: `${window.location.origin}${BASE_URL}mockServiceWorker.js`,
