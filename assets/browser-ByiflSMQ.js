@@ -27,7 +27,7 @@ var __privateMethod = (obj, member, method) => {
   return method;
 };
 var _executor, _decorate, decorate_fn, _a2;
-import { S as SHOP_API } from "./index-BstKrNy_.js";
+import { S as SHOP_API } from "./index-DOtbJ39Q.js";
 var POSITIONALS_EXP$1 = /(%?)(%([sdijo]))/g;
 function serializePositional$1(positional, flag) {
   switch (flag) {
@@ -5186,7 +5186,7 @@ const handlers = [
       const sort = url.searchParams.get("sort");
       const page = url.searchParams.get("page") || "0";
       const size = url.searchParams.get("size") || "20";
-      await delay(200);
+      await delay(100);
       let filteredProducts = [...productsData.content];
       if (category && category !== "전체") {
         filteredProducts = filteredProducts.filter(
@@ -5238,7 +5238,7 @@ const handlers = [
       const url = new URL(request.url);
       const page = url.searchParams.get("page") || "0";
       const size = url.searchParams.get("size") || "50";
-      await delay(200);
+      await delay(100);
       const pageNum = parseInt(page);
       const sizeNum = parseInt(size);
       const startIndex = pageNum * sizeNum;
@@ -5293,7 +5293,7 @@ const handlers = [
         currentCartItems.totalElements = currentCartItems.content.length;
         currentCartItems.numberOfElements = currentCartItems.content.length;
       }
-      await delay(200);
+      await delay(100);
       return HttpResponse.json(cartItem, { status: 201 });
     }
   ),
@@ -5316,7 +5316,7 @@ const handlers = [
       }
       currentCartItems.totalElements = currentCartItems.content.length;
       currentCartItems.numberOfElements = currentCartItems.content.length;
-      await delay(200);
+      await delay(100);
       return new HttpResponse(null, { status: 204 });
     }
   ),
@@ -5337,7 +5337,7 @@ const handlers = [
         });
       }
       currentCartItems.content[itemIndex].quantity = quantity;
-      await delay(200);
+      await delay(100);
       return HttpResponse.json(currentCartItems.content[itemIndex]);
     }
   )
