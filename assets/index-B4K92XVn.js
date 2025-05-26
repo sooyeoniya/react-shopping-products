@@ -11539,12 +11539,12 @@ const useAPI = (key, fetcher) => {
   const result = reactExports.useMemo(() => {
     const value = data[key];
     if (!value) {
-      return { data: null, error: null, isLoading: true };
+      return { data: null, error: null, loading: true };
     }
     if (isApiError(value)) {
-      return { data: null, error: value.error, isLoading: false };
+      return { data: null, error: value.error, loading: false };
     }
-    return { data: value, error: null, isLoading: false };
+    return { data: value, error: null, loading: false };
   }, [data, key]);
   const refetch = reactExports.useCallback(
     () => fetchData(key, fetcher),
@@ -11593,7 +11593,7 @@ const useProducts = () => {
   const {
     data: products,
     error,
-    isLoading,
+    loading,
     refetch
   } = useAPI("products", fetcher);
   reactExports.useEffect(() => {
@@ -11602,7 +11602,7 @@ const useProducts = () => {
   return {
     products,
     error,
-    isLoading,
+    loading,
     category,
     setCategory,
     sortOption,
@@ -11833,7 +11833,7 @@ const useCartItems = () => {
   const {
     data: cartItems,
     error,
-    isLoading,
+    loading,
     refetch
   } = useAPI("cartItems", fetcher);
   const cartItemIds = reactExports.useMemo(
@@ -11933,7 +11933,7 @@ const useCartItems = () => {
   return {
     cartItems,
     cartItemsCount,
-    isLoading,
+    loading,
     error,
     totalPriceInCart,
     quantityByProductId,
@@ -12127,30 +12127,30 @@ const ProductItem = ({
     addProductInCart
   } = useCartItems();
   const currentQuantity = quantityByProductId(id2);
-  const isOutOfStock = maxQuantity <= 0;
-  const isMaxQuantityReached = currentQuantity >= maxQuantity;
-  const isInCart = currentQuantity >= CART_QUANTITY_THRESHOLD;
+  const outOfStock = maxQuantity <= 0;
+  const reachedMaxQuantity = currentQuantity >= maxQuantity;
+  const existsInCart = currentQuantity >= CART_QUANTITY_THRESHOLD;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductContainer, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ProductImage, { $url: imageUrl, children: isOutOfStock && /* @__PURE__ */ jsxRuntimeExports.jsx(SoldOutOverlay, { children: "SOLD OUT" }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ProductImage, { $url: imageUrl, children: outOfStock && /* @__PURE__ */ jsxRuntimeExports.jsx(SoldOutOverlay, { children: "SOLD OUT" }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductWrapper, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(ProductName, { children: name }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductPrice, { children: [
         price.toLocaleString(),
         "원"
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(QuantityWrapper, { children: isInCart ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsxRuntimeExports.jsx(QuantityWrapper, { children: existsInCart ? /* @__PURE__ */ jsxRuntimeExports.jsx(
         QuantitySelector,
         {
           quantity: currentQuantity,
           onIncrease: () => increaseItemQuantity(id2),
           onDecrease: () => decreaseItemQuantity(id2),
-          increaseDisabled: isMaxQuantityReached
+          increaseDisabled: reachedMaxQuantity
         }
       ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
         AddCartItemButton,
         {
           onClick: () => addProductInCart(id2),
-          disabled: isMaxQuantityReached
+          disabled: reachedMaxQuantity
         }
       ) })
     ] })
@@ -12216,7 +12216,7 @@ const ProductItemSkeleton = () => {
 };
 const ProductsSkeleton = Array.from({ length: 6 }).map((_, index) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItemSkeleton, {}, index));
 const ProductCatalog = () => {
-  const { isLoading, products, error } = useProducts();
+  const { loading, products, error } = useProducts();
   useApiResponseToasts(error);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductCatalog$1, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(ProductCatalogTitle, { children: "상품목록" }),
@@ -12224,7 +12224,7 @@ const ProductCatalog = () => {
       /* @__PURE__ */ jsxRuntimeExports.jsx(CategoryFilter, {}),
       /* @__PURE__ */ jsxRuntimeExports.jsx(ProductSorter, {})
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ProductGrid, { children: !isLoading ? products == null ? void 0 : products.content.map((productInfo) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItem, { ...productInfo }, productInfo.id)) : ProductsSkeleton })
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ProductGrid, { children: !loading ? products == null ? void 0 : products.content.map((productInfo) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItem, { ...productInfo }, productInfo.id)) : ProductsSkeleton })
   ] });
 };
 const BASE_URL = "/react-shopping-products/";
@@ -12485,7 +12485,7 @@ function App() {
   ] }) });
 }
 async function enableMocking() {
-  const { worker } = await __vitePreload(() => import("./browser-B6miXEfh.js"), true ? [] : void 0);
+  const { worker } = await __vitePreload(() => import("./browser-BpIMLGBN.js"), true ? [] : void 0);
   return worker.start({
     serviceWorker: {
       url: `${window.location.origin}${BASE_URL}mockServiceWorker.js`,
