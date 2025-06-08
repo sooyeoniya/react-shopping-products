@@ -11762,17 +11762,15 @@ const ProductProvider = ({ children }) => {
     (newCategory) => {
       searchParams.set("category", newCategory);
       setSearchParams(searchParams);
-      fetchData();
     },
-    [searchParams, setSearchParams, fetchData]
+    [searchParams, setSearchParams]
   );
   const setSortOption = reactExports.useCallback(
     (newSort) => {
       searchParams.set("sort", newSort);
       setSearchParams(searchParams);
-      fetchData();
     },
-    [searchParams, setSearchParams, fetchData]
+    [searchParams, setSearchParams]
   );
   const contextValue = reactExports.useMemo(
     () => ({
@@ -12400,7 +12398,7 @@ function App() {
   ] }) });
 }
 async function enableMocking() {
-  const { worker } = await __vitePreload(() => import("./browser-Vs9bdDfb.js"), true ? [] : void 0);
+  const { worker } = await __vitePreload(() => import("./browser-DRuFWMnP.js"), true ? [] : void 0);
   return worker.start({
     serviceWorker: {
       url: `${window.location.origin}${BASE_URL}mockServiceWorker.js`,
