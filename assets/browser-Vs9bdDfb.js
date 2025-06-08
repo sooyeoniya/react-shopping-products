@@ -27,7 +27,7 @@ var __privateMethod = (obj, member, method) => {
   return method;
 };
 var _executor, _decorate, decorate_fn, _a2;
-import { S as SHOP_API } from "./index-B4K92XVn.js";
+import { A as API_BASE_URL } from "./index-ChHqNltT.js";
 var POSITIONALS_EXP$1 = /(%?)(%([sdijo]))/g;
 function serializePositional$1(positional, flag) {
   switch (flag) {
@@ -4972,375 +4972,263 @@ async function delay(durationOrMode) {
   return new Promise((resolve) => setTimeout(resolve, delayTime));
 }
 checkGlobals();
-const cartItemsData = {
-  content: [],
-  totalElements: 0,
-  totalPages: 0,
-  size: 0,
-  number: 0,
-  sort: { empty: false, sorted: true, unsorted: false },
-  pageable: {
-    offset: 0,
-    sort: { empty: false, sorted: true, unsorted: false },
-    paged: true,
-    pageNumber: 0,
-    pageSize: 50,
-    unpaged: false
+const products = [
+  {
+    id: 1,
+    name: "유기농 바나나",
+    price: 4500,
+    imageUrl: "https://i.namu.wiki/i/Mj0aArUbJiq5_c500MqmbYyDPWnSiDBCsxbesdkR0XTOtDvwrjj2ponJvctbYgQ7zPE_LvjsJHAl786rZu0tkw.webp",
+    category: "식료품",
+    quantity: 3
   },
-  first: true,
-  last: true,
-  numberOfElements: 0,
-  empty: true
-};
-const productsData = {
-  content: [
-    {
-      id: 1,
-      name: "유기농 바나나",
-      price: 4500,
-      imageUrl: "https://i.namu.wiki/i/Mj0aArUbJiq5_c500MqmbYyDPWnSiDBCsxbesdkR0XTOtDvwrjj2ponJvctbYgQ7zPE_LvjsJHAl786rZu0tkw.webp",
-      category: "식료품",
-      quantity: 3
-    },
-    {
-      id: 2,
-      name: "신선한 사과 1kg",
-      price: 7900,
-      imageUrl: "https://i.namu.wiki/i/QHZlaOvDdhvtLDYrA6IRvUZdddgwY9q5d0rMBywEIh7dbcNTCzTmE2CDM05JA9GRuXWqp5LsxE_T8BvGNOJhVA.webp",
-      category: "식료품",
-      quantity: 3
-    },
-    {
-      id: 3,
-      name: "무항생제 닭가슴살 500g",
-      price: 8900,
-      imageUrl: "https://health.chosun.com/site/data/img_dir/2021/11/04/2021110401776_0.jpg",
-      category: "식료품",
-      quantity: 0
-    },
-    {
-      id: 4,
-      name: "유기농 현미 4kg",
-      price: 16e3,
-      imageUrl: "",
-      category: "식료품",
-      quantity: 3
-    },
-    {
-      id: 5,
-      name: "친환경 양배추",
-      price: 3200,
-      imageUrl: "https://i.namu.wiki/i/5ISYTfYvAdrL8uIoYVlMZ0sJCQWOgRHTdcerXSErt2gVgaxEzXAcUhcgJVpVwKFccpD5N8cg_M656GL0O3O2jw.webp",
-      category: "식료품",
-      quantity: 1
-    },
-    {
-      id: 6,
-      name: "신선한 연어 300g",
-      price: 15e3,
-      imageUrl: "",
-      category: "식료품",
-      quantity: 3
-    },
-    {
-      id: 7,
-      name: "유기농 우유 1L",
-      price: 3900,
-      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Milk_glass.jpg/250px-Milk_glass.jpg",
-      category: "식료품",
-      quantity: 3
-    },
-    {
-      id: 8,
-      name: "통밀 식빵",
-      price: 4800,
-      imageUrl: "https://i.namu.wiki/i/Ppbu45jiME3PCSgCzo6Ljs1ogkayv_wGLSkbHRfBmRypZUt8s7j6Gxq0kFe0ScEzHHeE7NNkY2CFjVQ_BZXAgQ.webp",
-      category: "식료품",
-      quantity: 3
-    },
-    {
-      id: 9,
-      name: "한우 불고기용 300g",
-      price: 22e3,
-      imageUrl: "",
-      category: "식료품",
-      quantity: 3
-    },
-    {
-      id: 10,
-      name: "유기농 딸기 500g",
-      price: 9800,
-      imageUrl: "",
-      category: "식료품",
-      quantity: 3
-    },
-    {
-      id: 11,
-      name: "가죽 크로스백",
-      price: 59e3,
-      imageUrl: "",
-      category: "패션잡화",
-      quantity: 3
-    },
-    {
-      id: 12,
-      name: "캐주얼 볼캡",
-      price: 24e3,
-      imageUrl: "",
-      category: "패션잡화",
-      quantity: 0
-    },
-    {
-      id: 13,
-      name: "베이직 니트 머플러",
-      price: 18e3,
-      imageUrl: "",
-      category: "패션잡화",
-      quantity: 3
-    },
-    {
-      id: 14,
-      name: "패션 양말 3세트",
-      price: 12e3,
-      imageUrl: "",
-      category: "패션잡화",
-      quantity: 0
-    },
-    {
-      id: 15,
-      name: "가죽 장갑",
-      price: 28e3,
-      imageUrl: "",
-      category: "패션잡화",
-      quantity: 3
-    },
-    {
-      id: 16,
-      name: "캐주얼 벨트",
-      price: 25e3,
-      imageUrl: "",
-      category: "패션잡화",
-      quantity: 3
-    },
-    {
-      id: 17,
-      name: "빈티지 스카프",
-      price: 21e3,
-      imageUrl: "",
-      category: "패션잡화",
-      quantity: 3
-    },
-    {
-      id: 18,
-      name: "여성용 손목시계",
-      price: 45e3,
-      imageUrl: "",
-      category: "패션잡화",
-      quantity: 3
-    },
-    {
-      id: 19,
-      name: "선글라스",
-      price: 37e3,
-      imageUrl: "",
-      category: "패션잡화",
-      quantity: 3
-    },
-    {
-      id: 20,
-      name: "미니멀 백팩",
-      price: 67e3,
-      imageUrl: "",
-      category: "패션잡화",
-      quantity: 3
-    }
-  ],
-  totalElements: 20,
-  totalPages: 1,
-  size: 20,
-  number: 0,
-  sort: { empty: false, sorted: true, unsorted: false },
-  pageable: {
-    offset: 0,
-    sort: { empty: false, sorted: true, unsorted: false },
-    paged: true,
-    pageNumber: 0,
-    pageSize: 20,
-    unpaged: false
+  {
+    id: 2,
+    name: "신선한 사과 1kg",
+    price: 7900,
+    imageUrl: "https://i.namu.wiki/i/QHZlaOvDdhvtLDYrA6IRvUZdddgwY9q5d0rMBywEIh7dbcNTCzTmE2CDM05JA9GRuXWqp5LsxE_T8BvGNOJhVA.webp",
+    category: "식료품",
+    quantity: 3
   },
-  first: true,
-  last: true,
-  numberOfElements: 20,
-  empty: false
-};
-const currentCartItems = { ...cartItemsData };
+  {
+    id: 3,
+    name: "무항생제 닭가슴살 500g",
+    price: 8900,
+    imageUrl: "https://health.chosun.com/site/data/img_dir/2021/11/04/2021110401776_0.jpg",
+    category: "식료품",
+    quantity: 0
+  },
+  {
+    id: 4,
+    name: "유기농 현미 4kg",
+    price: 16e3,
+    imageUrl: "",
+    category: "식료품",
+    quantity: 3
+  },
+  {
+    id: 5,
+    name: "친환경 양배추",
+    price: 3200,
+    imageUrl: "https://i.namu.wiki/i/5ISYTfYvAdrL8uIoYVlMZ0sJCQWOgRHTdcerXSErt2gVgaxEzXAcUhcgJVpVwKFccpD5N8cg_M656GL0O3O2jw.webp",
+    category: "식료품",
+    quantity: 1
+  },
+  {
+    id: 6,
+    name: "신선한 연어 300g",
+    price: 15e3,
+    imageUrl: "",
+    category: "식료품",
+    quantity: 3
+  },
+  {
+    id: 7,
+    name: "유기농 우유 1L",
+    price: 3900,
+    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Milk_glass.jpg/250px-Milk_glass.jpg",
+    category: "식료품",
+    quantity: 3
+  },
+  {
+    id: 8,
+    name: "통밀 식빵",
+    price: 4800,
+    imageUrl: "https://i.namu.wiki/i/Ppbu45jiME3PCSgCzo6Ljs1ogkayv_wGLSkbHRfBmRypZUt8s7j6Gxq0kFe0ScEzHHeE7NNkY2CFjVQ_BZXAgQ.webp",
+    category: "식료품",
+    quantity: 3
+  },
+  {
+    id: 9,
+    name: "한우 불고기용 300g",
+    price: 22e3,
+    imageUrl: "",
+    category: "식료품",
+    quantity: 3
+  },
+  {
+    id: 10,
+    name: "유기농 딸기 500g",
+    price: 9800,
+    imageUrl: "",
+    category: "식료품",
+    quantity: 3
+  },
+  {
+    id: 11,
+    name: "가죽 크로스백",
+    price: 59e3,
+    imageUrl: "",
+    category: "패션잡화",
+    quantity: 3
+  },
+  {
+    id: 12,
+    name: "캐주얼 볼캡",
+    price: 24e3,
+    imageUrl: "",
+    category: "패션잡화",
+    quantity: 0
+  },
+  {
+    id: 13,
+    name: "베이직 니트 머플러",
+    price: 18e3,
+    imageUrl: "",
+    category: "패션잡화",
+    quantity: 3
+  },
+  {
+    id: 14,
+    name: "패션 양말 3세트",
+    price: 12e3,
+    imageUrl: "",
+    category: "패션잡화",
+    quantity: 0
+  },
+  {
+    id: 15,
+    name: "가죽 장갑",
+    price: 28e3,
+    imageUrl: "",
+    category: "패션잡화",
+    quantity: 3
+  },
+  {
+    id: 16,
+    name: "캐주얼 벨트",
+    price: 25e3,
+    imageUrl: "",
+    category: "패션잡화",
+    quantity: 3
+  },
+  {
+    id: 17,
+    name: "빈티지 스카프",
+    price: 21e3,
+    imageUrl: "",
+    category: "패션잡화",
+    quantity: 3
+  },
+  {
+    id: 18,
+    name: "여성용 손목시계",
+    price: 45e3,
+    imageUrl: "",
+    category: "패션잡화",
+    quantity: 3
+  },
+  {
+    id: 19,
+    name: "선글라스",
+    price: 37e3,
+    imageUrl: "",
+    category: "패션잡화",
+    quantity: 3
+  },
+  {
+    id: 20,
+    name: "미니멀 백팩",
+    price: 67e3,
+    imageUrl: "",
+    category: "패션잡화",
+    quantity: 3
+  }
+];
+let cartItems = [];
 const handlers = [
   /**
    * Products API : GET
    */
-  http.get(
-    `${SHOP_API.baseUrl}${SHOP_API.endpoint.products}`,
-    async ({ request }) => {
-      const url = new URL(request.url);
-      const category = url.searchParams.get("category");
-      const sort = url.searchParams.get("sort");
-      const page = url.searchParams.get("page") || "0";
-      const size = url.searchParams.get("size") || "20";
-      await delay(100);
-      let filteredProducts = [...productsData.content];
-      if (category && category !== "전체") {
-        filteredProducts = filteredProducts.filter(
-          (product) => product.category === category
-        );
-      }
-      if (sort) {
-        const [sortField, sortOrder] = sort.split(",");
-        if (sortField === "price") {
-          filteredProducts.sort((a, b) => {
-            return sortOrder === "asc" ? a.price - b.price : b.price - a.price;
-          });
-        }
-      }
-      const pageNum = parseInt(page);
-      const sizeNum = parseInt(size);
-      const startIndex = pageNum * sizeNum;
-      const endIndex = startIndex + sizeNum;
-      const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
-      const response = {
-        content: paginatedProducts,
-        totalElements: filteredProducts.length,
-        totalPages: Math.ceil(filteredProducts.length / sizeNum),
-        size: sizeNum,
-        number: pageNum,
-        sort: { empty: !sort, sorted: !!sort, unsorted: !sort },
-        pageable: {
-          offset: startIndex,
-          sort: { empty: !sort, sorted: !!sort, unsorted: !sort },
-          paged: true,
-          pageNumber: pageNum,
-          pageSize: sizeNum,
-          unpaged: false
-        },
-        first: pageNum === 0,
-        last: (pageNum + 1) * sizeNum >= filteredProducts.length,
-        numberOfElements: paginatedProducts.length,
-        empty: paginatedProducts.length === 0
-      };
-      return HttpResponse.json(response);
+  http.get(`${API_BASE_URL}products`, async ({ request }) => {
+    const url = new URL(request.url);
+    const category = url.searchParams.get("category");
+    const sort = url.searchParams.get("sort");
+    await delay(100);
+    let filteredProducts = [...products];
+    if (category && category !== "전체") {
+      filteredProducts = filteredProducts.filter(
+        (product) => product.category === category
+      );
     }
-  ),
+    if (sort) {
+      const [sortField, sortOrder] = sort.split(",");
+      if (sortField === "price") {
+        filteredProducts.sort((a, b) => {
+          return sortOrder === "asc" ? a.price - b.price : b.price - a.price;
+        });
+      }
+    }
+    return HttpResponse.json(filteredProducts);
+  }),
   /**
    * CartItems API : GET
    */
-  http.get(
-    `${SHOP_API.baseUrl}${SHOP_API.endpoint.cartItems}`,
-    async ({ request }) => {
-      const url = new URL(request.url);
-      const page = url.searchParams.get("page") || "0";
-      const size = url.searchParams.get("size") || "50";
-      await delay(100);
-      const pageNum = parseInt(page);
-      const sizeNum = parseInt(size);
-      const startIndex = pageNum * sizeNum;
-      const endIndex = Math.min(
-        startIndex + sizeNum,
-        currentCartItems.content.length
-      );
-      const paginatedCartItems = currentCartItems.content.slice(
-        startIndex,
-        endIndex
-      );
-      const response = {
-        ...currentCartItems,
-        content: paginatedCartItems,
-        size: sizeNum,
-        number: pageNum,
-        first: pageNum === 0,
-        last: endIndex >= currentCartItems.content.length,
-        numberOfElements: paginatedCartItems.length
-      };
-      return HttpResponse.json(response);
-    }
-  ),
+  http.get(`${API_BASE_URL}cart-items`, async () => {
+    return HttpResponse.json(cartItems);
+  }),
   /**
    * CartItems API : POST
    */
-  http.post(
-    `${SHOP_API.baseUrl}${SHOP_API.endpoint.cartItems}`,
-    async ({ request }) => {
-      const { productId, quantity = 1 } = await request.json();
-      const product = productsData.content.find((p) => p.id === productId);
-      if (!product) {
-        return new HttpResponse(null, {
-          status: 404,
-          statusText: "Not found"
-        });
-      }
-      const existingItemIndex = currentCartItems.content.findIndex(
-        (item) => item.product.id === productId
-      );
-      let cartItem;
-      if (existingItemIndex >= 0) {
-        currentCartItems.content[existingItemIndex].quantity = quantity;
-        cartItem = currentCartItems.content[existingItemIndex];
-      } else {
-        cartItem = {
-          id: productId + 100,
-          product,
-          quantity
-        };
-        currentCartItems.content.push(cartItem);
-        currentCartItems.totalElements = currentCartItems.content.length;
-        currentCartItems.numberOfElements = currentCartItems.content.length;
-      }
-      await delay(100);
-      return HttpResponse.json(cartItem, { status: 201 });
+  http.post(`${API_BASE_URL}cart-items`, async ({ request }) => {
+    const { productId, quantity = 1 } = await request.json();
+    const product = products.find((p) => p.id === productId);
+    if (!product) {
+      return new HttpResponse(null, {
+        status: 404,
+        statusText: "Not found"
+      });
     }
-  ),
+    const existingItemIndex = cartItems.findIndex(
+      (item) => item.product.id === productId
+    );
+    let cartItem;
+    if (existingItemIndex >= 0) {
+      cartItems[existingItemIndex].quantity = quantity;
+      cartItem = cartItems[existingItemIndex];
+    } else {
+      cartItem = {
+        id: productId + 100,
+        product,
+        quantity
+      };
+      cartItems.push(cartItem);
+    }
+    await delay(100);
+    return HttpResponse.json(cartItem, { status: 201 });
+  }),
   /**
    * CartItems API : DELETE
    */
-  http.delete(
-    `${SHOP_API.baseUrl}${SHOP_API.endpoint.cartItems}/:cartId`,
-    async ({ params }) => {
-      const { cartId } = params;
-      const initialLength = currentCartItems.content.length;
-      currentCartItems.content = currentCartItems.content.filter(
-        (item) => item.id !== Number(cartId)
-      );
-      if (currentCartItems.content.length === initialLength) {
-        return new HttpResponse(null, {
-          status: 404,
-          statusText: "Not found"
-        });
-      }
-      currentCartItems.totalElements = currentCartItems.content.length;
-      currentCartItems.numberOfElements = currentCartItems.content.length;
-      await delay(100);
-      return new HttpResponse(null, { status: 204 });
+  http.delete(`${API_BASE_URL}cart-items/:cartId`, async ({ params }) => {
+    const { cartId } = params;
+    const cartIdNum = Number(cartId);
+    const initialLength = cartItems.length;
+    cartItems = cartItems.filter((item) => item.id !== cartIdNum);
+    if (cartItems.length === initialLength) {
+      return new HttpResponse(null, {
+        status: 404,
+        statusText: "Not found"
+      });
     }
-  ),
+    await delay(100);
+    return new HttpResponse(null, { status: 204 });
+  }),
   /**
    * CartItems API : PATCH
    */
-  http.patch(
-    `${SHOP_API.baseUrl}${SHOP_API.endpoint.cartItems}/:cartId`,
-    async ({ request }) => {
-      const { id: cartId, quantity } = await request.json();
-      const itemIndex = currentCartItems.content.findIndex(
-        (item) => item.id === Number(cartId)
-      );
-      if (itemIndex === -1) {
-        return new HttpResponse(null, {
-          status: 404,
-          statusText: "Not found"
-        });
-      }
-      currentCartItems.content[itemIndex].quantity = quantity;
-      await delay(100);
-      return HttpResponse.json(currentCartItems.content[itemIndex]);
+  http.patch(`${API_BASE_URL}cart-items/:cartId`, async ({ request }) => {
+    const { id: cartId, quantity } = await request.json();
+    const itemIndex = cartItems.findIndex((item) => item.id === Number(cartId));
+    if (itemIndex === -1) {
+      return new HttpResponse(null, {
+        status: 404,
+        statusText: "Not found"
+      });
     }
-  )
+    cartItems[itemIndex].quantity = quantity;
+    await delay(100);
+    return HttpResponse.json(cartItems[itemIndex]);
+  })
 ];
 const worker = setupWorker(...handlers);
 export {

@@ -1,3 +1,9 @@
+var __defProp = Object.defineProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __publicField = (obj, key, value) => {
+  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+  return value;
+};
 function _mergeNamespaces(n2, m2) {
   for (var i = 0; i < m2.length; i++) {
     const e2 = m2[i];
@@ -11406,209 +11412,99 @@ const LayoutWrapper = newStyled.div`
   background-color: #fff;
   position: relative;
 `;
-const APIContext = reactExports.createContext({});
-const APIProvider = ({ children }) => {
-  const [data, setData] = reactExports.useState({});
-  const fetchData = reactExports.useCallback(
-    async (key, fetcher) => {
-      try {
-        const result = await fetcher();
-        setData((prev2) => ({ ...prev2, [key]: result }));
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
-        setData((prev2) => ({ ...prev2, [key]: { error: errorMessage } }));
-      }
-    },
-    []
-  );
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(APIContext.Provider, { value: { data, setData, fetchData }, children });
-};
-const getBaseUrl = () => {
+const getApiBaseUrl = () => {
   {
     return "https://techcourse-lv2-alb-974870821.ap-northeast-2.elb.amazonaws.com/";
   }
 };
-const SHOP_API = {
-  baseUrl: getBaseUrl(),
-  endpoint: {
-    products: "products",
-    cartItems: "cart-items"
-  },
-  headers: {
-    default: {
-      Authorization: `Basic ${"c29veWVvbml5YTpwYXNzd29yZA=="}`
-    }
+const API_BASE_URL = getApiBaseUrl();
+const API_TOKEN = "c29veWVvbml5YTpwYXNzd29yZA==";
+class HTTPClient {
+  constructor(baseUrl, apiKey) {
+    __publicField(this, "baseUrl", "");
+    __publicField(this, "apiKey", "");
+    this.baseUrl = baseUrl;
+    this.apiKey = apiKey || "";
   }
-};
-const isApiError = (response) => {
-  return response !== null && response !== void 0 && typeof response === "object" && "error" in response && typeof response.error === "string";
-};
-const isApiSuccess = (response) => {
-  return response !== null && response !== void 0 && typeof response === "object" && "success" in response && response.success === true;
-};
-const createApiUrl = (endpoint, params) => {
-  const searchParams = new URLSearchParams(params);
-  return `${SHOP_API.baseUrl}${endpoint}?${searchParams.toString()}`;
-};
-const createResourceUrl = (endpoint, resourceId) => {
-  return `${SHOP_API.baseUrl}${endpoint}/${resourceId}`;
-};
-const applyDefaultHeaders = (options = {}) => {
-  return {
-    ...options,
-    headers: { ...SHOP_API.headers.default, ...options.headers || {} }
-  };
-};
-const ERROR_MESSAGES = {
-  400: "잘못된 요청입니다. 입력값을 다시 확인해주세요.",
-  401: "인증이 필요합니다. 로그인 후 다시 시도해주세요.",
-  403: "접근이 거부되었습니다. 권한을 확인해주세요.",
-  404: "요청한 리소스를 찾을 수 없습니다.",
-  500: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
-};
-const fetchAPI = async (url, options, parseJson = true) => {
-  try {
-    const response = await fetch(url, applyDefaultHeaders(options));
-    if (!response.ok) {
-      const status = response.status;
-      const message = ERROR_MESSAGES[status] || `에러가 발생했습니다. (코드: ${status})`;
-      return { error: message, status };
-    }
-    if (parseJson)
-      return await response.json();
-    return { success: true };
-  } catch (error) {
-    if (error instanceof Error) {
-      return { error: `네트워크 에러: ${error.message}` };
-    }
-    return { error: "예기치 못한 오류가 발생했습니다. 다시 시도해주세요." };
+  getHeaders() {
+    return {
+      "Content-Type": "application/json",
+      ...this.apiKey && { Authorization: `Basic ${this.apiKey}` }
+    };
   }
-};
-const getData = async (url, options = {}) => {
-  return fetchAPI(url, {
-    ...options,
-    method: "GET"
-  });
-};
-const postData = async (url, data, options = {}) => {
-  return fetchAPI(
-    url,
-    {
-      ...options,
+  async get(url) {
+    const response = await fetch(this.baseUrl + url, {
+      headers: this.getHeaders()
+    });
+    return response;
+  }
+  async post(url, data) {
+    const response = await fetch(this.baseUrl + url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers
-      },
-      body: data ? JSON.stringify(data) : void 0
-    },
-    false
-  );
-};
-const deleteData = async (url, options = {}) => {
-  return fetchAPI(
-    url,
-    {
-      ...options,
-      method: "DELETE"
-    },
-    false
-  );
-};
-const patchData = async (url, data, options = {}) => {
-  return fetchAPI(
-    url,
-    {
-      ...options,
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers
-      },
-      body: data ? JSON.stringify(data) : void 0
-    },
-    false
-  );
-};
-const useAPI = (key, fetcher) => {
-  const { data, fetchData } = reactExports.useContext(APIContext);
-  reactExports.useEffect(() => {
-    if (!data[key])
-      fetchData(key, fetcher);
-  }, [key, fetcher, data, fetchData]);
-  const result = reactExports.useMemo(() => {
-    const value = data[key];
-    if (!value) {
-      return { data: null, error: null, loading: true };
-    }
-    if (isApiError(value)) {
-      return { data: null, error: value.error, loading: false };
-    }
-    return { data: value, error: null, loading: false };
-  }, [data, key]);
-  const refetch = reactExports.useCallback(
-    () => fetchData(key, fetcher),
-    [fetchData, key, fetcher]
-  );
-  return { ...result, refetch };
-};
-const URL$2 = SHOP_API.endpoint.products;
-const sortOptionsMap = {
-  "낮은 가격 순": "price,asc",
-  "높은 가격 순": "price,desc"
-};
-const ProductsAPI = {
-  get: async (category, sortOption) => {
-    const params = { page: "0", size: "20" };
-    if (category !== "전체")
-      params.category = category;
-    if (sortOption && sortOptionsMap[sortOption]) {
-      params.sort = sortOptionsMap[sortOption];
-    }
-    return getData(createApiUrl(URL$2, params));
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+    return response;
   }
+  async patch(url, data) {
+    const response = await fetch(this.baseUrl + url, {
+      method: "PATCH",
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+    return response;
+  }
+  async delete(url) {
+    const response = await fetch(this.baseUrl + url, {
+      method: "DELETE",
+      headers: this.getHeaders()
+    });
+    return response;
+  }
+  setApiKey(apiKey) {
+    this.apiKey = apiKey;
+  }
+}
+const httpClient = new HTTPClient(API_BASE_URL, API_TOKEN);
+const ERROR_MESSAGE$1 = {
+  GET: "장바구니를 가져오는 데 실패했습니다.",
+  POST: "상품을 장바구니에 추가하는 데 실패했습니다.",
+  DELETE: "장바구니에서 상품을 삭제하는 데 실패했습니다.",
+  PATCH: "장바구니 상품 수량을 변경하는 데 실패했습니다."
 };
-const useProducts = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const category = searchParams.get("category") || "전체";
-  const sortOption = searchParams.get("sort") || "낮은 가격 순";
-  const setCategory = reactExports.useCallback(
-    (newCategory) => {
-      searchParams.set("category", newCategory);
-      setSearchParams(searchParams);
-    },
-    [searchParams, setSearchParams]
-  );
-  const setSortOption = reactExports.useCallback(
-    (newSort) => {
-      searchParams.set("sort", newSort);
-      setSearchParams(searchParams);
-    },
-    [searchParams, setSearchParams]
-  );
-  const fetcher = reactExports.useCallback(
-    () => ProductsAPI.get(category, sortOption),
-    [category, sortOption]
-  );
-  const {
-    data: products,
-    error,
-    loading,
-    refetch
-  } = useAPI("products", fetcher);
-  reactExports.useEffect(() => {
-    refetch();
-  }, [category, sortOption, refetch]);
-  return {
-    products,
-    error,
-    loading,
-    category,
-    setCategory,
-    sortOption,
-    setSortOption,
-    refetchProducts: refetch
-  };
+const CartItemsAPI = {
+  get: async () => {
+    const params = new URLSearchParams({
+      page: "0",
+      size: "50",
+      sort: "asc"
+    });
+    const response = await httpClient.get(`cart-items?${params.toString()}`);
+    if (!response.ok)
+      throw new Error(ERROR_MESSAGE$1.GET);
+    return await response.json();
+  },
+  post: async (productId) => {
+    const response = await httpClient.post(`cart-items`, {
+      productId,
+      quantity: 1
+    });
+    if (!response.ok)
+      throw new Error(ERROR_MESSAGE$1.POST);
+  },
+  delete: async (cartId) => {
+    const response = await httpClient.delete(`cart-items/${cartId}`);
+    if (!response.ok)
+      throw new Error(ERROR_MESSAGE$1.DELETE);
+  },
+  patch: async (cartId, quantity) => {
+    const response = await httpClient.patch(`cart-items/${cartId}`, {
+      id: cartId,
+      quantity
+    });
+    if (!response.ok)
+      throw new Error(ERROR_MESSAGE$1.PATCH);
+  }
 };
 const TOAST_TYPES = {
   SUCCESS: "success",
@@ -11664,22 +11560,21 @@ const ToastProvider = ({ children }) => {
       }
     };
   }, []);
-  const showToast = ({
-    message: message2,
-    type: type2 = TOAST_TYPES.INFO,
-    duration = 4e3
-  }) => {
-    if (toastTimer.current) {
-      clearTimeout(toastTimer.current);
-      toastTimer.current = null;
-    }
-    setType(type2);
-    setMessage(message2);
-    toastTimer.current = setTimeout(() => {
-      setMessage("");
-      toastTimer.current = null;
-    }, duration);
-  };
+  const showToast = reactExports.useCallback(
+    ({ message: message2, type: type2 = TOAST_TYPES.INFO, duration = 4e3 }) => {
+      if (toastTimer.current) {
+        clearTimeout(toastTimer.current);
+        toastTimer.current = null;
+      }
+      setType(type2);
+      setMessage(message2);
+      toastTimer.current = setTimeout(() => {
+        setMessage("");
+        toastTimer.current = null;
+      }, duration);
+    },
+    []
+  );
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ToastContext.Provider, { value: { showToast }, children: [
     children,
     !!message && /* @__PURE__ */ jsxRuntimeExports.jsx(Toast, { message, type })
@@ -11692,64 +11587,219 @@ const useToast = () => {
   }
   return context;
 };
-const useApiResponseToasts = (autoWatchError) => {
+const CartContext = reactExports.createContext(null);
+const CartProvider = ({ children }) => {
+  const [cartItems, setCartItems] = reactExports.useState([]);
   const { showToast } = useToast();
-  const handleError = reactExports.useCallback(
-    (response, customMessage) => {
-      if (isApiError(response)) {
-        showToast({
-          message: customMessage || response.error,
-          type: TOAST_TYPES.ERROR
-        });
-        return true;
-      }
-      return false;
-    },
-    [showToast]
-  );
-  const handleSuccess = reactExports.useCallback(
-    (response, message) => {
-      const isSuccess = !response || isApiSuccess(response) || !isApiError(response) && response !== void 0 && response !== null;
-      if (isSuccess) {
-        showToast({
-          message,
-          type: TOAST_TYPES.SUCCESS
-        });
-        return true;
-      }
-      return false;
-    },
-    [showToast]
-  );
-  const showSuccess = reactExports.useCallback(
-    (message) => {
-      showToast({
-        message,
-        type: TOAST_TYPES.SUCCESS
-      });
-    },
-    [showToast]
-  );
-  const showError = reactExports.useCallback(
-    (error, customMessage) => {
-      if (error) {
-        showToast({
-          message: customMessage ?? error,
-          type: TOAST_TYPES.ERROR
-        });
-      }
-    },
-    [showToast]
-  );
-  reactExports.useEffect(() => {
-    if (autoWatchError) {
-      showToast({
-        message: autoWatchError,
-        type: TOAST_TYPES.ERROR
-      });
+  const fetchData = reactExports.useCallback(async () => {
+    try {
+      setCartItems(await CartItemsAPI.get());
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+      showToast({ message, type: TOAST_TYPES.ERROR });
     }
-  }, [autoWatchError, showToast]);
-  return { handleError, handleSuccess, showError, showSuccess };
+  }, [showToast]);
+  const cartItemIds = reactExports.useMemo(
+    () => (cartItems == null ? void 0 : cartItems.map((productInfo) => ({
+      cartId: productInfo.id,
+      productId: productInfo.product.id
+    }))) ?? [],
+    [cartItems]
+  );
+  const cartItemsCount = (cartItems == null ? void 0 : cartItems.length) ?? 0;
+  const allQuantities = reactExports.useMemo(
+    () => (cartItems == null ? void 0 : cartItems.map((productInfo) => ({
+      cartId: productInfo.id,
+      productId: productInfo.product.id,
+      quantity: productInfo.quantity
+    }))) ?? [],
+    [cartItems]
+  );
+  const quantityByProductId = reactExports.useCallback(
+    (productId) => {
+      var _a;
+      return ((_a = allQuantities.find((item) => item.productId === productId)) == null ? void 0 : _a.quantity) ?? 0;
+    },
+    [allQuantities]
+  );
+  const totalPriceInCart = reactExports.useMemo(
+    () => (cartItems == null ? void 0 : cartItems.reduce((total, productInfo) => {
+      var _a;
+      const price = ((_a = productInfo.product) == null ? void 0 : _a.price) ?? 0;
+      const quantity = productInfo.quantity ?? 0;
+      return total + price * quantity;
+    }, 0)) ?? 0,
+    [cartItems]
+  );
+  const decreaseItemQuantity = reactExports.useCallback(
+    async (productId) => {
+      const currentProductId = cartItemIds.find(
+        (productInfo) => productInfo.productId === productId
+      );
+      if (!currentProductId)
+        return;
+      const quantity = quantityByProductId(currentProductId.productId);
+      if (quantity <= 1) {
+        await CartItemsAPI.delete(currentProductId.cartId);
+      } else {
+        await CartItemsAPI.patch(currentProductId.cartId, quantity - 1);
+      }
+      fetchData();
+    },
+    [cartItemIds, quantityByProductId, fetchData]
+  );
+  const increaseItemQuantity = reactExports.useCallback(
+    async (productId) => {
+      const currentProductId = cartItemIds.find(
+        (productInfo) => productInfo.productId === productId
+      );
+      if (!currentProductId)
+        return;
+      await CartItemsAPI.patch(
+        currentProductId.cartId,
+        quantityByProductId(currentProductId.productId) + 1
+      );
+      fetchData();
+    },
+    [fetchData, cartItemIds, quantityByProductId]
+  );
+  const addProductInCart = reactExports.useCallback(
+    async (productId) => {
+      try {
+        await CartItemsAPI.post(productId);
+        fetchData();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+        showToast({ message, type: TOAST_TYPES.ERROR });
+      }
+    },
+    [fetchData, showToast]
+  );
+  const deleteProductInCart = reactExports.useCallback(
+    async (cartId) => {
+      await CartItemsAPI.delete(cartId);
+      fetchData();
+    },
+    [fetchData]
+  );
+  const contextValue = reactExports.useMemo(
+    () => ({
+      cartItems,
+      fetchData,
+      cartItemsCount,
+      totalPriceInCart,
+      quantityByProductId,
+      decreaseItemQuantity,
+      increaseItemQuantity,
+      addProductInCart,
+      deleteProductInCart
+    }),
+    [
+      cartItems,
+      fetchData,
+      cartItemsCount,
+      totalPriceInCart,
+      quantityByProductId,
+      decreaseItemQuantity,
+      increaseItemQuantity,
+      addProductInCart,
+      deleteProductInCart
+    ]
+  );
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(CartContext.Provider, { value: contextValue, children });
+};
+function useCart() {
+  const context = reactExports.useContext(CartContext);
+  if (!context)
+    throw new Error("useCart must be used within CartProvider");
+  return context;
+}
+const CartInitializer = () => {
+  const { fetchData } = useCart();
+  reactExports.useEffect(() => {
+    if (fetchData)
+      fetchData();
+  }, [fetchData]);
+  return null;
+};
+const ERROR_MESSAGE = "상품 데이터를 가져오는 데 실패했습니다.";
+const sortOptionsMap = {
+  "낮은 가격 순": "price,asc",
+  "높은 가격 순": "price,desc"
+};
+const ProductsAPI = {
+  get: async (category, sortOption) => {
+    const params = { page: "0", size: "20" };
+    if (category !== "전체")
+      params.category = category;
+    if (sortOption && sortOptionsMap[sortOption]) {
+      params.sort = sortOptionsMap[sortOption];
+    }
+    const response = await httpClient.get(
+      `products?${new URLSearchParams(params).toString()}`
+    );
+    if (!response.ok)
+      throw new Error(ERROR_MESSAGE);
+    return await response.json();
+  }
+};
+const ProductContext = reactExports.createContext(null);
+const ProductProvider = ({ children }) => {
+  const [products, setProducts] = reactExports.useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { showToast } = useToast();
+  const category = searchParams.get("category") || "전체";
+  const sortOption = searchParams.get("sort") || "낮은 가격 순";
+  const fetchData = reactExports.useCallback(async () => {
+    try {
+      setProducts(await ProductsAPI.get(category, sortOption));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+      showToast({ message, type: TOAST_TYPES.ERROR });
+    }
+  }, [showToast, category, sortOption]);
+  const setCategory = reactExports.useCallback(
+    (newCategory) => {
+      searchParams.set("category", newCategory);
+      setSearchParams(searchParams);
+      fetchData();
+    },
+    [searchParams, setSearchParams, fetchData]
+  );
+  const setSortOption = reactExports.useCallback(
+    (newSort) => {
+      searchParams.set("sort", newSort);
+      setSearchParams(searchParams);
+      fetchData();
+    },
+    [searchParams, setSearchParams, fetchData]
+  );
+  const contextValue = reactExports.useMemo(
+    () => ({
+      products,
+      fetchData,
+      category,
+      setCategory,
+      sortOption,
+      setSortOption
+    }),
+    [products, fetchData, category, setCategory, sortOption, setSortOption]
+  );
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ProductContext.Provider, { value: contextValue, children });
+};
+function useProduct() {
+  const context = reactExports.useContext(ProductContext);
+  if (!context)
+    throw new Error("useProduct must be used within ProductProvider");
+  return context;
+}
+const ProductInitializer = () => {
+  const { fetchData } = useProduct();
+  reactExports.useEffect(() => {
+    if (fetchData)
+      fetchData();
+  }, [fetchData]);
+  return null;
 };
 const ProductCatalog$1 = newStyled.div`
   height: 100%;
@@ -11788,7 +11838,7 @@ const SelectBox = ({
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Select, { value, onChange: (e2) => onChange(e2.target.value), children: options.map((option, index) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: option, children: option }, index)) });
 };
 const CategoryFilter = () => {
-  const { category, setCategory } = useProducts();
+  const { category, setCategory } = useProduct();
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     SelectBox,
     {
@@ -11799,7 +11849,7 @@ const CategoryFilter = () => {
   );
 };
 const ProductSorter = () => {
-  const { sortOption, setSortOption } = useProducts();
+  const { sortOption, setSortOption } = useProduct();
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     SelectBox,
     {
@@ -11808,141 +11858,6 @@ const ProductSorter = () => {
       options: sortOptions
     }
   );
-};
-const URL$1 = SHOP_API.endpoint.cartItems;
-const CartItemsAPI = {
-  get: async () => {
-    const params = { page: "0", size: "50" };
-    return getData(createApiUrl(URL$1, params));
-  },
-  post: async (productId) => {
-    const data = { productId, quantity: 1 };
-    return postData(createApiUrl(URL$1), data);
-  },
-  delete: async (cartId) => {
-    return deleteData(createResourceUrl(URL$1, cartId));
-  },
-  patch: async (cartId, quantity) => {
-    const data = { id: cartId, quantity };
-    return patchData(createResourceUrl(URL$1, cartId), data);
-  }
-};
-const useCartItems = () => {
-  const { handleError, handleSuccess } = useApiResponseToasts();
-  const fetcher = reactExports.useCallback(() => CartItemsAPI.get(), []);
-  const {
-    data: cartItems,
-    error,
-    loading,
-    refetch
-  } = useAPI("cartItems", fetcher);
-  const cartItemIds = reactExports.useMemo(
-    () => (cartItems == null ? void 0 : cartItems.content.map((productInfo) => ({
-      cartId: productInfo.id,
-      productId: productInfo.product.id
-    }))) ?? [],
-    [cartItems == null ? void 0 : cartItems.content]
-  );
-  const cartItemsCount = (cartItems == null ? void 0 : cartItems.content.length) ?? 0;
-  const allQuantities = reactExports.useMemo(
-    () => (cartItems == null ? void 0 : cartItems.content.map((productInfo) => ({
-      cartId: productInfo.id,
-      productId: productInfo.product.id,
-      quantity: productInfo.quantity
-    }))) ?? [],
-    [cartItems == null ? void 0 : cartItems.content]
-  );
-  const quantityByProductId = reactExports.useCallback(
-    (productId) => {
-      var _a;
-      return ((_a = allQuantities.find((item) => item.productId === productId)) == null ? void 0 : _a.quantity) ?? 0;
-    },
-    [allQuantities]
-  );
-  const totalPriceInCart = reactExports.useMemo(
-    () => (cartItems == null ? void 0 : cartItems.content.reduce((total, productInfo) => {
-      var _a;
-      const price = ((_a = productInfo.product) == null ? void 0 : _a.price) ?? 0;
-      const quantity = productInfo.quantity ?? 0;
-      return total + price * quantity;
-    }, 0)) ?? 0,
-    [cartItems == null ? void 0 : cartItems.content]
-  );
-  const decreaseItemQuantity = reactExports.useCallback(
-    async (productId) => {
-      const currentProductId = cartItemIds.find(
-        (productInfo) => productInfo.productId === productId
-      );
-      if (!currentProductId)
-        return;
-      const quantity = quantityByProductId(currentProductId.productId);
-      if (quantity <= 1) {
-        const response = await CartItemsAPI.delete(currentProductId.cartId);
-        if (handleError(response))
-          return;
-        handleSuccess(response, "상품이 장바구니에서 삭제되었습니다.");
-      } else {
-        const response = await CartItemsAPI.patch(
-          currentProductId.cartId,
-          quantity - 1
-        );
-        if (handleError(response))
-          return;
-      }
-      refetch();
-    },
-    [cartItemIds, quantityByProductId, refetch, handleError, handleSuccess]
-  );
-  const increaseItemQuantity = reactExports.useCallback(
-    async (productId) => {
-      const currentProductId = cartItemIds.find(
-        (productInfo) => productInfo.productId === productId
-      );
-      if (!currentProductId)
-        return;
-      const response = await CartItemsAPI.patch(
-        currentProductId.cartId,
-        quantityByProductId(currentProductId.productId) + 1
-      );
-      if (handleError(response))
-        return;
-      refetch();
-    },
-    [cartItemIds, quantityByProductId, refetch, handleError]
-  );
-  const addProductInCart = reactExports.useCallback(
-    async (productId) => {
-      const response = await CartItemsAPI.post(productId);
-      if (handleError(response))
-        return;
-      handleSuccess(response, "상품이 장바구니에 추가되었습니다.");
-      refetch();
-    },
-    [refetch, handleError, handleSuccess]
-  );
-  const deleteProductInCart = reactExports.useCallback(
-    async (cartId) => {
-      const response = await CartItemsAPI.delete(cartId);
-      if (handleError(response))
-        return;
-      handleSuccess(response, "상품이 장바구니에서 삭제되었습니다.");
-      refetch();
-    },
-    [refetch, handleError, handleSuccess]
-  );
-  return {
-    cartItems,
-    cartItemsCount,
-    loading,
-    error,
-    totalPriceInCart,
-    quantityByProductId,
-    decreaseItemQuantity,
-    increaseItemQuantity,
-    addProductInCart,
-    deleteProductInCart,
-    refetchCartItems: refetch
-  };
 };
 const QuantitySelector$1 = newStyled.div`
   display: flex;
@@ -12125,7 +12040,7 @@ const ProductItem = ({
     increaseItemQuantity,
     decreaseItemQuantity,
     addProductInCart
-  } = useCartItems();
+  } = useCart();
   const currentQuantity = quantityByProductId(id2);
   const outOfStock = maxQuantity <= 0;
   const reachedMaxQuantity = currentQuantity >= maxQuantity;
@@ -12214,17 +12129,18 @@ const ProductItemSkeleton = () => {
     ] })
   ] });
 };
-const ProductsSkeleton = Array.from({ length: 6 }).map((_, index) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItemSkeleton, {}, index));
+Array.from({ length: 6 }).map((_, index) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItemSkeleton, {}, index));
 const ProductCatalog = () => {
-  const { loading, products, error } = useProducts();
-  useApiResponseToasts(error);
+  const { products } = useProduct();
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductCatalog$1, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ProductInitializer, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CartInitializer, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(ProductCatalogTitle, { children: "상품목록" }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductControlPanel, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(CategoryFilter, {}),
       /* @__PURE__ */ jsxRuntimeExports.jsx(ProductSorter, {})
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ProductGrid, { children: !loading ? products == null ? void 0 : products.content.map((productInfo) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItem, { ...productInfo }, productInfo.id)) : ProductsSkeleton })
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ProductGrid, { children: products == null ? void 0 : products.map((productInfo) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItem, { ...productInfo }, productInfo.id)) })
   ] });
 };
 const BASE_URL = "/react-shopping-products/";
@@ -12336,7 +12252,7 @@ const CartItem = ({
   quantity: currentQuantity,
   product: { id: productId, name, price, imageUrl, quantity: maxQuantity }
 }) => {
-  const { increaseItemQuantity, decreaseItemQuantity, deleteProductInCart } = useCartItems();
+  const { increaseItemQuantity, decreaseItemQuantity, deleteProductInCart } = useCart();
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(CartItem$1, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(CartItemImage, { $url: imageUrl }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(CartItemWrapper, { children: [
@@ -12407,11 +12323,10 @@ const TotalPriceValue = newStyled.span`
 `;
 const CartModal = () => {
   const { closeModal } = useModal();
-  const { cartItems, totalPriceInCart, error } = useCartItems();
-  useApiResponseToasts(error);
+  const { cartItems, totalPriceInCart } = useCart();
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(CartModal$1, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Title, { children: "장바구니" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ScrollContainer, { children: cartItems == null ? void 0 : cartItems.content.map((productInfo) => {
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ScrollContainer, { children: cartItems == null ? void 0 : cartItems.map((productInfo) => {
       return /* @__PURE__ */ jsxRuntimeExports.jsx(CartItem, { ...productInfo }, productInfo.id);
     }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(TotalPriceContainer, { children: [
@@ -12467,7 +12382,7 @@ const CartItemsCount = newStyled.div`
 `;
 const Cart = "/react-shopping-products/cart.svg";
 const ShopHeader = () => {
-  const { cartItemsCount } = useCartItems();
+  const { cartItemsCount } = useCart();
   const { openModal } = useModal();
   const handleOpenCart = () => openModal(/* @__PURE__ */ jsxRuntimeExports.jsx(CartModal, {}));
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ShopHeader$1, { children: [
@@ -12485,7 +12400,7 @@ function App() {
   ] }) });
 }
 async function enableMocking() {
-  const { worker } = await __vitePreload(() => import("./browser-BpIMLGBN.js"), true ? [] : void 0);
+  const { worker } = await __vitePreload(() => import("./browser-Vs9bdDfb.js"), true ? [] : void 0);
   return worker.start({
     serviceWorker: {
       url: `${window.location.origin}${BASE_URL}mockServiceWorker.js`,
@@ -12496,9 +12411,9 @@ async function enableMocking() {
 }
 enableMocking().then(() => {
   client.createRoot(document.getElementById("root")).render(
-    /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToastProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(APIProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ModalProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) }) }) })
+    /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToastProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CartProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ProductProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ModalProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) }) }) }) })
   );
 });
 export {
-  SHOP_API as S
+  API_BASE_URL as A
 };
