@@ -11412,105 +11412,16 @@ const LayoutWrapper = newStyled.div`
   background-color: #fff;
   position: relative;
 `;
-const getApiBaseUrl = () => {
-  {
-    return "https://techcourse-lv2-alb-974870821.ap-northeast-2.elb.amazonaws.com/";
-  }
-};
-const API_BASE_URL = getApiBaseUrl();
-const API_TOKEN = "c29veWVvbml5YTpwYXNzd29yZA==";
-class HTTPClient {
-  constructor(baseUrl, apiKey) {
-    __publicField(this, "baseUrl", "");
-    __publicField(this, "apiKey", "");
-    this.baseUrl = baseUrl;
-    this.apiKey = apiKey || "";
-  }
-  getHeaders() {
-    return {
-      "Content-Type": "application/json",
-      ...this.apiKey && { Authorization: `Basic ${this.apiKey}` }
-    };
-  }
-  async get(url) {
-    const response = await fetch(this.baseUrl + url, {
-      headers: this.getHeaders()
-    });
-    return response;
-  }
-  async post(url, data) {
-    const response = await fetch(this.baseUrl + url, {
-      method: "POST",
-      headers: this.getHeaders(),
-      body: JSON.stringify(data)
-    });
-    return response;
-  }
-  async patch(url, data) {
-    const response = await fetch(this.baseUrl + url, {
-      method: "PATCH",
-      headers: this.getHeaders(),
-      body: JSON.stringify(data)
-    });
-    return response;
-  }
-  async delete(url) {
-    const response = await fetch(this.baseUrl + url, {
-      method: "DELETE",
-      headers: this.getHeaders()
-    });
-    return response;
-  }
-  setApiKey(apiKey) {
-    this.apiKey = apiKey;
-  }
-}
-const httpClient = new HTTPClient(API_BASE_URL, API_TOKEN);
-const ERROR_MESSAGE$1 = {
-  GET: "장바구니를 가져오는 데 실패했습니다.",
-  POST: "상품을 장바구니에 추가하는 데 실패했습니다.",
-  DELETE: "장바구니에서 상품을 삭제하는 데 실패했습니다.",
-  PATCH: "장바구니 상품 수량을 변경하는 데 실패했습니다."
-};
-const CartItemsAPI = {
-  get: async () => {
-    const params = new URLSearchParams({
-      page: "0",
-      size: "50",
-      sort: "asc"
-    });
-    const response = await httpClient.get(`cart-items?${params.toString()}`);
-    if (!response.ok)
-      throw new Error(ERROR_MESSAGE$1.GET);
-    return await response.json();
-  },
-  post: async (productId) => {
-    const response = await httpClient.post(`cart-items`, {
-      productId,
-      quantity: 1
-    });
-    if (!response.ok)
-      throw new Error(ERROR_MESSAGE$1.POST);
-  },
-  delete: async (cartId) => {
-    const response = await httpClient.delete(`cart-items/${cartId}`);
-    if (!response.ok)
-      throw new Error(ERROR_MESSAGE$1.DELETE);
-  },
-  patch: async (cartId, quantity) => {
-    const response = await httpClient.patch(`cart-items/${cartId}`, {
-      id: cartId,
-      quantity
-    });
-    if (!response.ok)
-      throw new Error(ERROR_MESSAGE$1.PATCH);
-  }
-};
 const TOAST_TYPES = {
   SUCCESS: "success",
   ERROR: "error",
   INFO: "info",
   WARNING: "warning"
+};
+const FETCH_TYPES = {
+  START: "START",
+  SUCCESS: "SUCCESS",
+  ERROR: "ERROR"
 };
 const Portal = ({ children, containerId = "custom-root" }) => {
   const [container, setContainer] = reactExports.useState(null);
@@ -11587,18 +11498,179 @@ const useToast = () => {
   }
   return context;
 };
+function fetchReducer(state, action) {
+  switch (action.type) {
+    case FETCH_TYPES.START:
+      return { data: null, loading: true, error: false, success: false };
+    case FETCH_TYPES.SUCCESS:
+      return {
+        data: action.data,
+        loading: false,
+        error: false,
+        success: true
+      };
+    case FETCH_TYPES.ERROR:
+      return { data: null, loading: false, error: true, success: false };
+    default:
+      return state;
+  }
+}
+const useFetch = (fetch2, showError = true) => {
+  const { showToast } = useToast();
+  const [state, dispatch] = reactExports.useReducer(fetchReducer, {
+    data: null,
+    loading: false,
+    error: false,
+    success: false
+  });
+  const fetchData = reactExports.useCallback(
+    async (params) => {
+      dispatch({ type: FETCH_TYPES.START });
+      try {
+        const data = await fetch2(params);
+        dispatch({ type: FETCH_TYPES.SUCCESS, data });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+        dispatch({ type: FETCH_TYPES.ERROR, message });
+        if (showError)
+          showToast({ message, type: TOAST_TYPES.ERROR });
+      }
+    },
+    [fetch2, showError, showToast]
+  );
+  return { ...state, fetchData };
+};
+const useMutation = (mutationFn, options) => {
+  const { showToast } = useToast();
+  const mutate = reactExports.useCallback(
+    async (variables) => {
+      var _a, _b;
+      try {
+        await mutationFn(variables);
+        (_a = options == null ? void 0 : options.onSuccess) == null ? void 0 : _a.call(options, variables);
+        if (options == null ? void 0 : options.successMessage) {
+          showToast({
+            message: options.successMessage,
+            type: TOAST_TYPES.SUCCESS
+          });
+        }
+      } catch (error) {
+        const message = (options == null ? void 0 : options.errorMessage) || (error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.");
+        showToast({ message, type: TOAST_TYPES.ERROR });
+        (_b = options == null ? void 0 : options.onError) == null ? void 0 : _b.call(options, error);
+      }
+    },
+    [mutationFn, options, showToast]
+  );
+  return { mutate };
+};
+const getApiBaseUrl = () => {
+  {
+    return "https://techcourse-lv2-alb-974870821.ap-northeast-2.elb.amazonaws.com/";
+  }
+};
+const API_BASE_URL = getApiBaseUrl();
+const API_TOKEN = "c29veWVvbml5YTpwYXNzd29yZA==";
+class HTTPClient {
+  constructor(baseUrl, apiKey) {
+    __publicField(this, "baseUrl", "");
+    __publicField(this, "apiKey", "");
+    this.baseUrl = baseUrl;
+    this.apiKey = apiKey || "";
+  }
+  getHeaders() {
+    return {
+      "Content-Type": "application/json",
+      ...this.apiKey && { Authorization: `Basic ${this.apiKey}` }
+    };
+  }
+  async get(url) {
+    const response = await fetch(this.baseUrl + url, {
+      headers: this.getHeaders()
+    });
+    return response;
+  }
+  async post(url, data) {
+    const response = await fetch(this.baseUrl + url, {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+    return response;
+  }
+  async patch(url, data) {
+    const response = await fetch(this.baseUrl + url, {
+      method: "PATCH",
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+    return response;
+  }
+  async delete(url) {
+    const response = await fetch(this.baseUrl + url, {
+      method: "DELETE",
+      headers: this.getHeaders()
+    });
+    return response;
+  }
+  setApiKey(apiKey) {
+    this.apiKey = apiKey;
+  }
+}
+const httpClient = new HTTPClient(API_BASE_URL, API_TOKEN);
+const ERROR_MESSAGE$1 = {
+  GET: "장바구니를 가져오는 데 실패했습니다.",
+  POST: "상품을 장바구니에 추가하는 데 실패했습니다.",
+  DELETE: "장바구니에서 상품을 삭제하는 데 실패했습니다.",
+  PATCH: "장바구니 상품 수량을 변경하는 데 실패했습니다."
+};
+const ENDPOINT$1 = "cart-items";
+const CartItemsAPI = {
+  get: async () => {
+    const params = new URLSearchParams({
+      page: "0",
+      size: "50",
+      sort: "asc"
+    });
+    const response = await httpClient.get(`${ENDPOINT$1}?${params.toString()}`);
+    if (!response.ok)
+      throw new Error(ERROR_MESSAGE$1.GET);
+    return await response.json();
+  },
+  post: async (productId) => {
+    const response = await httpClient.post(`${ENDPOINT$1}`, {
+      productId,
+      quantity: 1
+    });
+    if (!response.ok)
+      throw new Error(ERROR_MESSAGE$1.POST);
+  },
+  delete: async (cartId) => {
+    const response = await httpClient.delete(`${ENDPOINT$1}/${cartId}`);
+    if (!response.ok)
+      throw new Error(ERROR_MESSAGE$1.DELETE);
+  },
+  patch: async (cartId, quantity) => {
+    const response = await httpClient.patch(`${ENDPOINT$1}/${cartId}`, {
+      id: cartId,
+      quantity
+    });
+    if (!response.ok)
+      throw new Error(ERROR_MESSAGE$1.PATCH);
+  }
+};
 const CartContext = reactExports.createContext(null);
 const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = reactExports.useState([]);
-  const { showToast } = useToast();
-  const fetchData = reactExports.useCallback(async () => {
-    try {
-      setCartItems(await CartItemsAPI.get());
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
-      showToast({ message, type: TOAST_TYPES.ERROR });
+  const { data, success, fetchData } = useFetch(
+    () => CartItemsAPI.get()
+  );
+  reactExports.useEffect(() => {
+    if (data && success) {
+      setCartItems(data);
     }
-  }, [showToast]);
+  }, [data, success]);
+  const refetch = reactExports.useCallback(() => fetchData(), [fetchData]);
   const cartItemIds = reactExports.useMemo(
     () => (cartItems == null ? void 0 : cartItems.map((productInfo) => ({
       cartId: productInfo.id,
@@ -11606,7 +11678,6 @@ const CartProvider = ({ children }) => {
     }))) ?? [],
     [cartItems]
   );
-  const cartItemsCount = (cartItems == null ? void 0 : cartItems.length) ?? 0;
   const allQuantities = reactExports.useMemo(
     () => (cartItems == null ? void 0 : cartItems.map((productInfo) => ({
       cartId: productInfo.id,
@@ -11631,62 +11702,74 @@ const CartProvider = ({ children }) => {
     }, 0)) ?? 0,
     [cartItems]
   );
+  const { mutate: deleteCartItem } = useMutation(
+    (cartId) => CartItemsAPI.delete(cartId),
+    {
+      successMessage: "상품이 장바구니에서 삭제되었습니다.",
+      onSuccess: () => fetchData()
+    }
+  );
+  const { mutate: updateCartItemQuantity } = useMutation(({ cartId, quantity }) => CartItemsAPI.patch(cartId, quantity), {
+    onSuccess: () => fetchData()
+  });
+  const { mutate: addToCart } = useMutation(
+    (productId) => CartItemsAPI.post(productId),
+    {
+      successMessage: "상품이 장바구니에 추가되었습니다.",
+      onSuccess: () => fetchData()
+    }
+  );
   const decreaseItemQuantity = reactExports.useCallback(
     async (productId) => {
-      const currentProductId = cartItemIds.find(
+      const currentItem = cartItemIds.find(
         (productInfo) => productInfo.productId === productId
       );
-      if (!currentProductId)
+      if (!currentItem)
         return;
-      const quantity = quantityByProductId(currentProductId.productId);
+      const quantity = quantityByProductId(currentItem.productId);
       if (quantity <= 1) {
-        await CartItemsAPI.delete(currentProductId.cartId);
+        await deleteCartItem(currentItem.cartId);
       } else {
-        await CartItemsAPI.patch(currentProductId.cartId, quantity - 1);
+        await updateCartItemQuantity({
+          cartId: currentItem.cartId,
+          quantity: quantity - 1
+        });
       }
-      fetchData();
     },
-    [cartItemIds, quantityByProductId, fetchData]
+    [cartItemIds, quantityByProductId, deleteCartItem, updateCartItemQuantity]
   );
   const increaseItemQuantity = reactExports.useCallback(
     async (productId) => {
-      const currentProductId = cartItemIds.find(
+      const currentItem = cartItemIds.find(
         (productInfo) => productInfo.productId === productId
       );
-      if (!currentProductId)
+      if (!currentItem)
         return;
-      await CartItemsAPI.patch(
-        currentProductId.cartId,
-        quantityByProductId(currentProductId.productId) + 1
-      );
-      fetchData();
+      const quantity = quantityByProductId(currentItem.productId);
+      await updateCartItemQuantity({
+        cartId: currentItem.cartId,
+        quantity: quantity + 1
+      });
     },
-    [fetchData, cartItemIds, quantityByProductId]
+    [cartItemIds, quantityByProductId, updateCartItemQuantity]
   );
   const addProductInCart = reactExports.useCallback(
     async (productId) => {
-      try {
-        await CartItemsAPI.post(productId);
-        fetchData();
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
-        showToast({ message, type: TOAST_TYPES.ERROR });
-      }
+      await addToCart(productId);
     },
-    [fetchData, showToast]
+    [addToCart]
   );
   const deleteProductInCart = reactExports.useCallback(
     async (cartId) => {
-      await CartItemsAPI.delete(cartId);
-      fetchData();
+      await deleteCartItem(cartId);
     },
-    [fetchData]
+    [deleteCartItem]
   );
   const contextValue = reactExports.useMemo(
     () => ({
-      cartItems,
-      fetchData,
-      cartItemsCount,
+      refetch,
+      cartItems: cartItems || [],
+      cartItemsCount: (cartItems == null ? void 0 : cartItems.length) ?? 0,
       totalPriceInCart,
       quantityByProductId,
       decreaseItemQuantity,
@@ -11695,9 +11778,8 @@ const CartProvider = ({ children }) => {
       deleteProductInCart
     }),
     [
+      refetch,
       cartItems,
-      fetchData,
-      cartItemsCount,
       totalPriceInCart,
       quantityByProductId,
       decreaseItemQuantity,
@@ -11715,14 +11797,15 @@ function useCart() {
   return context;
 }
 const CartInitializer = () => {
-  const { fetchData } = useCart();
+  const { refetch } = useCart();
   reactExports.useEffect(() => {
-    if (fetchData)
-      fetchData();
-  }, [fetchData]);
+    if (refetch)
+      refetch();
+  }, []);
   return null;
 };
 const ERROR_MESSAGE = "상품 데이터를 가져오는 데 실패했습니다.";
+const ENDPOINT = "products";
 const sortOptionsMap = {
   "낮은 가격 순": "price,asc",
   "높은 가격 순": "price,desc"
@@ -11736,7 +11819,7 @@ const ProductsAPI = {
       params.sort = sortOptionsMap[sortOption];
     }
     const response = await httpClient.get(
-      `products?${new URLSearchParams(params).toString()}`
+      `${ENDPOINT}?${new URLSearchParams(params).toString()}`
     );
     if (!response.ok)
       throw new Error(ERROR_MESSAGE);
@@ -11747,41 +11830,57 @@ const ProductContext = reactExports.createContext(null);
 const ProductProvider = ({ children }) => {
   const [products, setProducts] = reactExports.useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { showToast } = useToast();
+  const fetchProducts = reactExports.useCallback(
+    (params) => ProductsAPI.get(params.category, params.sortOption),
+    []
+  );
+  const { data, loading, success, fetchData } = useFetch(fetchProducts);
+  reactExports.useEffect(() => {
+    if (data && success) {
+      setProducts(data);
+    }
+  }, [data, success]);
   const category = searchParams.get("category") || "전체";
   const sortOption = searchParams.get("sort") || "낮은 가격 순";
-  const fetchData = reactExports.useCallback(async () => {
-    try {
-      setProducts(await ProductsAPI.get(category, sortOption));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
-      showToast({ message, type: TOAST_TYPES.ERROR });
-    }
-  }, [showToast, category, sortOption]);
+  const refetch = reactExports.useCallback(
+    () => fetchData({ category, sortOption }),
+    [fetchData, category, sortOption]
+  );
   const setCategory = reactExports.useCallback(
     (newCategory) => {
       searchParams.set("category", newCategory);
       setSearchParams(searchParams);
+      fetchData({ category: newCategory, sortOption });
     },
-    [searchParams, setSearchParams]
+    [searchParams, setSearchParams, fetchData, sortOption]
   );
   const setSortOption = reactExports.useCallback(
     (newSort) => {
       searchParams.set("sort", newSort);
       setSearchParams(searchParams);
+      fetchData({ category, sortOption: newSort });
     },
-    [searchParams, setSearchParams]
+    [searchParams, setSearchParams, fetchData, category]
   );
   const contextValue = reactExports.useMemo(
     () => ({
+      refetch,
+      loading,
       products,
-      fetchData,
       category,
       setCategory,
       sortOption,
       setSortOption
     }),
-    [products, fetchData, category, setCategory, sortOption, setSortOption]
+    [
+      refetch,
+      loading,
+      products,
+      category,
+      setCategory,
+      sortOption,
+      setSortOption
+    ]
   );
   return /* @__PURE__ */ jsxRuntimeExports.jsx(ProductContext.Provider, { value: contextValue, children });
 };
@@ -11792,11 +11891,11 @@ function useProduct() {
   return context;
 }
 const ProductInitializer = () => {
-  const { fetchData } = useProduct();
+  const { refetch } = useProduct();
   reactExports.useEffect(() => {
-    if (fetchData)
-      fetchData();
-  }, [fetchData]);
+    if (refetch)
+      refetch();
+  }, []);
   return null;
 };
 const ProductCatalog$1 = newStyled.div`
@@ -12127,9 +12226,9 @@ const ProductItemSkeleton = () => {
     ] })
   ] });
 };
-Array.from({ length: 6 }).map((_, index) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItemSkeleton, {}, index));
+const ProductsSkeleton = Array.from({ length: 6 }).map((_, index) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItemSkeleton, {}, index));
 const ProductCatalog = () => {
-  const { products } = useProduct();
+  const { products, loading } = useProduct();
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ProductCatalog$1, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(ProductInitializer, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(CartInitializer, {}),
@@ -12138,7 +12237,7 @@ const ProductCatalog = () => {
       /* @__PURE__ */ jsxRuntimeExports.jsx(CategoryFilter, {}),
       /* @__PURE__ */ jsxRuntimeExports.jsx(ProductSorter, {})
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ProductGrid, { children: products == null ? void 0 : products.map((productInfo) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItem, { ...productInfo }, productInfo.id)) })
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ProductGrid, { children: !loading ? products == null ? void 0 : products.map((productInfo) => /* @__PURE__ */ jsxRuntimeExports.jsx(ProductItem, { ...productInfo }, productInfo.id)) : ProductsSkeleton })
   ] });
 };
 const BASE_URL = "/react-shopping-products/";
@@ -12398,7 +12497,7 @@ function App() {
   ] }) });
 }
 async function enableMocking() {
-  const { worker } = await __vitePreload(() => import("./browser-DRuFWMnP.js"), true ? [] : void 0);
+  const { worker } = await __vitePreload(() => import("./browser-DAQtd88r.js"), true ? [] : void 0);
   return worker.start({
     serviceWorker: {
       url: `${window.location.origin}${BASE_URL}mockServiceWorker.js`,

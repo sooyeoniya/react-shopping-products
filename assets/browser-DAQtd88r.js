@@ -27,7 +27,7 @@ var __privateMethod = (obj, member, method) => {
   return method;
 };
 var _executor, _decorate, decorate_fn, _a2;
-import { A as API_BASE_URL } from "./index-ClDkFriI.js";
+import { A as API_BASE_URL } from "./index-BcDoPAP4.js";
 var POSITIONALS_EXP$1 = /(%?)(%([sdijo]))/g;
 function serializePositional$1(positional, flag) {
   switch (flag) {
@@ -5134,12 +5134,16 @@ const products = [
     quantity: 3
   }
 ];
+const ENDPOINT = {
+  PRODUCTS: "products",
+  CART_ITEMS: "cart-items"
+};
 let cartItems = [];
 const handlers = [
   /**
    * Products API : GET
    */
-  http.get(`${API_BASE_URL}products`, async ({ request }) => {
+  http.get(`${API_BASE_URL}${ENDPOINT.PRODUCTS}`, async ({ request }) => {
     const url = new URL(request.url);
     const category = url.searchParams.get("category");
     const sort = url.searchParams.get("sort");
@@ -5163,13 +5167,13 @@ const handlers = [
   /**
    * CartItems API : GET
    */
-  http.get(`${API_BASE_URL}cart-items`, async () => {
+  http.get(`${API_BASE_URL}${ENDPOINT.CART_ITEMS}`, async () => {
     return HttpResponse.json(cartItems);
   }),
   /**
    * CartItems API : POST
    */
-  http.post(`${API_BASE_URL}cart-items`, async ({ request }) => {
+  http.post(`${API_BASE_URL}${ENDPOINT.CART_ITEMS}`, async ({ request }) => {
     const { productId, quantity = 1 } = await request.json();
     const product = products.find((p) => p.id === productId);
     if (!product) {
@@ -5199,36 +5203,44 @@ const handlers = [
   /**
    * CartItems API : DELETE
    */
-  http.delete(`${API_BASE_URL}cart-items/:cartId`, async ({ params }) => {
-    const { cartId } = params;
-    const cartIdNum = Number(cartId);
-    const initialLength = cartItems.length;
-    cartItems = cartItems.filter((item) => item.id !== cartIdNum);
-    if (cartItems.length === initialLength) {
-      return new HttpResponse(null, {
-        status: 404,
-        statusText: "Not found"
-      });
+  http.delete(
+    `${API_BASE_URL}${ENDPOINT.CART_ITEMS}/:cartId`,
+    async ({ params }) => {
+      const { cartId } = params;
+      const cartIdNum = Number(cartId);
+      const initialLength = cartItems.length;
+      cartItems = cartItems.filter((item) => item.id !== cartIdNum);
+      if (cartItems.length === initialLength) {
+        return new HttpResponse(null, {
+          status: 404,
+          statusText: "Not found"
+        });
+      }
+      await delay(100);
+      return new HttpResponse(null, { status: 204 });
     }
-    await delay(100);
-    return new HttpResponse(null, { status: 204 });
-  }),
+  ),
   /**
    * CartItems API : PATCH
    */
-  http.patch(`${API_BASE_URL}cart-items/:cartId`, async ({ request }) => {
-    const { id: cartId, quantity } = await request.json();
-    const itemIndex = cartItems.findIndex((item) => item.id === Number(cartId));
-    if (itemIndex === -1) {
-      return new HttpResponse(null, {
-        status: 404,
-        statusText: "Not found"
-      });
+  http.patch(
+    `${API_BASE_URL}${ENDPOINT.CART_ITEMS}/:cartId`,
+    async ({ request }) => {
+      const { id: cartId, quantity } = await request.json();
+      const itemIndex = cartItems.findIndex(
+        (item) => item.id === Number(cartId)
+      );
+      if (itemIndex === -1) {
+        return new HttpResponse(null, {
+          status: 404,
+          statusText: "Not found"
+        });
+      }
+      cartItems[itemIndex].quantity = quantity;
+      await delay(100);
+      return HttpResponse.json(cartItems[itemIndex]);
     }
-    cartItems[itemIndex].quantity = quantity;
-    await delay(100);
-    return HttpResponse.json(cartItems[itemIndex]);
-  })
+  )
 ];
 const worker = setupWorker(...handlers);
 export {
