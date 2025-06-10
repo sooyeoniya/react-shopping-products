@@ -11456,7 +11456,7 @@ const Toast$1 = newStyled.div`
   z-index: 1000;
 `;
 const Toast = ({ message, type }) => {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Toast$1, { $type: type, children: message }) });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Toast$1, { $type: type, "data-testid": "toast", children: message }) });
 };
 const ToastContext = reactExports.createContext(null);
 const ToastProvider = ({ children }) => {
@@ -11768,14 +11768,20 @@ const CartProvider = ({ children }) => {
   const contextValue = reactExports.useMemo(
     () => ({
       refetch,
-      cartItems: cartItems || [],
-      cartItemsCount: (cartItems == null ? void 0 : cartItems.length) ?? 0,
-      totalPriceInCart,
-      quantityByProductId,
-      decreaseItemQuantity,
-      increaseItemQuantity,
-      addProductInCart,
-      deleteProductInCart
+      cart: {
+        items: cartItems,
+        count: (cartItems == null ? void 0 : cartItems.length) ?? 0,
+        totalPrice: totalPriceInCart
+      },
+      product: {
+        add: addProductInCart,
+        delete: deleteProductInCart,
+        quantity: {
+          get: quantityByProductId,
+          increase: increaseItemQuantity,
+          decrease: decreaseItemQuantity
+        }
+      }
     }),
     [
       refetch,
@@ -11867,10 +11873,14 @@ const ProductProvider = ({ children }) => {
       refetch,
       loading,
       products,
-      category,
-      setCategory,
-      sortOption,
-      setSortOption
+      category: {
+        value: category,
+        set: setCategory
+      },
+      sort: {
+        value: sortOption,
+        set: setSortOption
+      }
     }),
     [
       refetch,
@@ -11935,26 +11945,19 @@ const SelectBox = ({
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Select, { value, onChange: (e2) => onChange(e2.target.value), children: options.map((option, index) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: option, children: option }, index)) });
 };
 const CategoryFilter = () => {
-  const { category, setCategory } = useProduct();
+  const { category } = useProduct();
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     SelectBox,
     {
-      value: category,
-      onChange: setCategory,
+      value: category.value,
+      onChange: category.set,
       options: categoryOptions
     }
   );
 };
 const ProductSorter = () => {
-  const { sortOption, setSortOption } = useProduct();
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    SelectBox,
-    {
-      value: sortOption,
-      onChange: setSortOption,
-      options: sortOptions
-    }
-  );
+  const { sort } = useProduct();
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(SelectBox, { value: sort.value, onChange: sort.set, options: sortOptions });
 };
 const QuantitySelector$1 = newStyled.div`
   display: flex;
@@ -12132,13 +12135,8 @@ const ProductItem = ({
   imageUrl,
   quantity: maxQuantity
 }) => {
-  const {
-    quantityByProductId,
-    increaseItemQuantity,
-    decreaseItemQuantity,
-    addProductInCart
-  } = useCart();
-  const currentQuantity = quantityByProductId(id2);
+  const { product } = useCart();
+  const currentQuantity = product.quantity.get(id2);
   const outOfStock = maxQuantity <= 0;
   const reachedMaxQuantity = currentQuantity >= maxQuantity;
   const existsInCart = currentQuantity >= CART_QUANTITY_THRESHOLD;
@@ -12154,14 +12152,14 @@ const ProductItem = ({
         QuantitySelector,
         {
           quantity: currentQuantity,
-          onIncrease: () => increaseItemQuantity(id2),
-          onDecrease: () => decreaseItemQuantity(id2),
+          onIncrease: () => product.quantity.increase(id2),
+          onDecrease: () => product.quantity.decrease(id2),
           increaseDisabled: reachedMaxQuantity
         }
       ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
         AddCartItemButton,
         {
-          onClick: () => addProductInCart(id2),
+          onClick: () => product.add(id2),
           disabled: reachedMaxQuantity
         }
       ) })
@@ -12270,7 +12268,14 @@ const Modal = ({ open, onClose, children }) => {
   const stopPropagation = (e2) => {
     e2.stopPropagation();
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: open && /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ModalBackdrop, { onClick: onClose, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ModalContainer, { onClick: stopPropagation, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ModalContent, { children }) }) }) }) });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: open && /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ModalBackdrop, { onClick: onClose, "data-testid": "modal-backdrop", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    ModalContainer,
+    {
+      onClick: stopPropagation,
+      "data-testid": "modal-container",
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ModalContent, { children })
+    }
+  ) }) }) });
 };
 const ModalContext = reactExports.createContext(null);
 const ModalProvider = ({ children }) => {
@@ -12349,7 +12354,7 @@ const CartItem = ({
   quantity: currentQuantity,
   product: { id: productId, name, price, imageUrl, quantity: maxQuantity }
 }) => {
-  const { increaseItemQuantity, decreaseItemQuantity, deleteProductInCart } = useCart();
+  const { product } = useCart();
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(CartItem$1, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(CartItemImage, { $url: imageUrl }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(CartItemWrapper, { children: [
@@ -12363,13 +12368,13 @@ const CartItem = ({
           QuantitySelector,
           {
             quantity: currentQuantity,
-            onIncrease: () => increaseItemQuantity(productId),
-            onDecrease: () => decreaseItemQuantity(productId),
+            onIncrease: () => product.quantity.increase(productId),
+            onDecrease: () => product.quantity.decrease(productId),
             increaseDisabled: currentQuantity >= maxQuantity
           }
         )
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(DeleteButton, { onClick: () => deleteProductInCart(cartId), children: "삭제" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(DeleteButton, { onClick: () => product.delete(cartId), children: "삭제" })
     ] })
   ] });
 };
@@ -12419,17 +12424,18 @@ const TotalPriceValue = newStyled.span`
   line-height: 100%;
 `;
 const CartModal = () => {
+  var _a;
   const { closeModal } = useModal();
-  const { cartItems, totalPriceInCart } = useCart();
+  const { cart } = useCart();
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(CartModal$1, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Title, { children: "장바구니" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ScrollContainer, { children: cartItems == null ? void 0 : cartItems.map((productInfo) => {
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ScrollContainer, { children: (_a = cart.items) == null ? void 0 : _a.map((productInfo) => {
       return /* @__PURE__ */ jsxRuntimeExports.jsx(CartItem, { ...productInfo }, productInfo.id);
     }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(TotalPriceContainer, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(TotalPriceLabel, { children: "총 결제 금액" }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(TotalPriceValue, { children: [
-        totalPriceInCart.toLocaleString(),
+        cart.totalPrice.toLocaleString(),
         "원"
       ] })
     ] }),
@@ -12479,14 +12485,14 @@ const CartItemsCount = newStyled.div`
 `;
 const Cart = "/react-shopping-products/cart.svg";
 const ShopHeader = () => {
-  const { cartItemsCount } = useCart();
+  const { cart } = useCart();
   const { openModal } = useModal();
   const handleOpenCart = () => openModal(/* @__PURE__ */ jsxRuntimeExports.jsx(CartModal, {}));
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ShopHeader$1, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Logo, { href: BASE_URL, children: "SHOP" }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(CartButton, { onClick: handleOpenCart, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(CartIcon, { src: Cart, alt: "cart" }),
-      !!cartItemsCount && /* @__PURE__ */ jsxRuntimeExports.jsx(CartItemsCount, { children: cartItemsCount })
+      !!cart.count && /* @__PURE__ */ jsxRuntimeExports.jsx(CartItemsCount, { children: cart.count })
     ] })
   ] });
 };
@@ -12497,7 +12503,7 @@ function App() {
   ] }) });
 }
 async function enableMocking() {
-  const { worker } = await __vitePreload(() => import("./browser-DAQtd88r.js"), true ? [] : void 0);
+  const { worker } = await __vitePreload(() => import("./browser-2a0hKlSk.js"), true ? [] : void 0);
   return worker.start({
     serviceWorker: {
       url: `${window.location.origin}${BASE_URL}mockServiceWorker.js`,
